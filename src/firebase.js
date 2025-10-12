@@ -3,13 +3,13 @@ import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC0dIek_KDVAD2iCsNEShjkBEcfQBAtupM",
-  authDomain: "cars-b0ceb.firebaseapp.com",
-  projectId: "cars-b0ceb",
-  storageBucket: "cars-b0ceb.firebasestorage.app",
-  messagingSenderId: "784695795447",
-  appId: "1:784695795447:web:a515848e9a3c973d7c3df2",
-  measurementId: "G-3M55JG7KMM",
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID,
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
@@ -25,7 +25,7 @@ const getCars = async () => {
     return carsData;
   } catch (error) {
     console.error("Error fetching data: ", error);
-    return []; 
+    return [];
   }
 };
 
