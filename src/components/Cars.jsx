@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Car from "./Car";
 
-const Cars = ({ cars }) => {
+const Cars = ({ cars, currentUser }) => {
   // 1. State for managing page, search, and sorting
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -82,7 +82,7 @@ const Cars = ({ cars }) => {
       {/* Container for the car cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-6">
         {currentCars.map((car) => (
-          <Car key={car.id} car={car} />
+          <Car key={car.id} car={car} currentUser={currentUser} />
         ))}
       </div>
 

@@ -18,7 +18,7 @@ function App() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setCurrentUser(user);
-        const userDocRef = doc(db, "admins", user.uid);
+        const userDocRef = doc(db, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
         setIsAdmin(userDocSnap.exists() && userDocSnap.data().isAdmin === true);
       } else {
@@ -69,7 +69,7 @@ function App() {
           loading ? (
             <span className="loading loading-lg"></span>
           ) : (
-            <Cars cars={cars} />
+            <Cars cars={cars} currentUser={currentUser} />
           )
         ) : (
           <div className="card bg-base-200 shadow-xl p-8">

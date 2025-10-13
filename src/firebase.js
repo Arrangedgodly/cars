@@ -21,7 +21,11 @@ export const auth = getAuth(app);
 const getCars = async () => {
   try {
     const querySnapshot = await getDocs(collection(db, "cars"));
-    const carsData = querySnapshot.docs.map(car => car.data());
+    // Combine the document ID with the rest of the car data
+    const carsData = querySnapshot.docs.map(car => ({ 
+      id: car.id, 
+      ...car.data() 
+    }));
     return carsData;
   } catch (error) {
     console.error("Error fetching data: ", error);
