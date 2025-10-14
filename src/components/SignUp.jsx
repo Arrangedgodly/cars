@@ -1,9 +1,9 @@
 // src/components/SignUp.js
 
 import React, { useState } from "react";
-import { auth, db } from "../firebase"; // 1. Import the 'db' instance
+import { auth, db } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore"; // 2. Import firestore functions
+import { doc, setDoc } from "firebase/firestore";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +15,6 @@ const SignUp = () => {
     setError(null);
 
     try {
-      // Create the user with email and password
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -24,13 +23,12 @@ const SignUp = () => {
       const user = userCredential.user;
       console.log("User created successfully!", user);
 
-      // 3. Create a new document in the 'users' collection
       await setDoc(doc(db, "users", user.uid), {
         email: user.email,
-        isAdmin: false, // Default new users to not be admins
+        isAdmin: false,
         ownedCars: [],
         wishlist: [],
-        ratings: {}, // Can store carId: rating pairs here
+        ratings: {},
       });
       
     } catch (error) {

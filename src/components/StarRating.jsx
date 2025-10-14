@@ -9,14 +9,21 @@ const StarRating = ({ rating, onRatingChange, carId, readOnly = false }) => {
 
   return (
     <div className="rating rating-md rating-half">
-      <input type="radio" name={`rating-${carId}`} className="rating-hidden" defaultChecked={rating === 0} />
-      
+      <input
+        type="radio"
+        name={`rating-${carId}`}
+        className="rating-hidden"
+        defaultChecked={rating === 0}
+      />
+
       {stars.map((value, index) => (
         <input
           key={value}
           type="radio"
           name={`rating-${carId}`}
-          className={`mask mask-star-2 ${index % 2 === 0 ? 'mask-half-1' : 'mask-half-2'} bg-green-500`}
+          className={`mask mask-star-2 ${
+            index % 2 === 0 ? "mask-half-1" : "mask-half-2"
+          } bg-green-500`}
           aria-label={`${value} star`}
           value={value}
           checked={rating === value}

@@ -1,12 +1,13 @@
-import getCars from "./firebase";
 import { useState, useEffect } from "react";
 import { auth, db } from "./firebase";
+import { Routes, Route, Link, Navigate } from "react-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import SignUp from "./components/SignUp";
 import SignIn from "./components/SignIn";
 import Cars from "./components/Cars";
 import AdminDashboard from "./components/AdminDashboard";
+import UserPage from "./components/UserPage";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -14,13 +15,61 @@ function App() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const handleRatingUpdate = (carId, newRatingData) => {
+    setCurrentUser((prevUser) => ({
+      ...prevUser,
+      ratings: {
+        ...prevUser.ratings,
+        [carId]: newRatingData.newPersonalRating,
+      },
+    }));
+    setCars((prevCars) =>
+      prevCars.map((car) => {
+        if (car.id === carId) {
+          return {
+            ...car,
+            totalRatingScore: newRatingData.newTotalRatingScore,
+            ratingCount: newRatingData.newRatingCount,
+          };
+        }
+        return car;
+      })
+    );
+  };
+
+  const handleCollectionUpdate = (carId, collectionType, wasAdded) => {
+    setCurrentUser((prevUser) => {
+      const currentCollection = prevUser[collectionType] || [];
+      const newCollection = wasAdded
+        ? [...currentCollection, carId]
+        : currentCollection.filter((id) => id !== carId);
+
+      return {
+        ...prevUser,
+        [collectionType]: newCollection,
+      };
+    });
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setCurrentUser(user);
         const userDocRef = doc(db, "users", user.uid);
         const userDocSnap = await getDoc(userDocRef);
-        setIsAdmin(userDocSnap.exists() && userDocSnap.data().isAdmin === true);
+
+        if (userDocSnap.exists()) {
+          const firestoreUserData = userDocSnap.data();
+          const combinedUser = {
+            uid: user.uid,
+            email: user.email,
+            ...firestoreUserData,
+          };
+          setCurrentUser(combinedUser);
+          setIsAdmin(firestoreUserData.isAdmin === true);
+        } else {
+          setCurrentUser(user);
+          setIsAdmin(false);
+        }
       } else {
         setCurrentUser(null);
         setIsAdmin(false);
@@ -33,7 +82,11 @@ function App() {
     const fetchCars = async () => {
       setLoading(true);
       try {
-        const carsData = await getCars();
+        const querySnapshot = await getDocs(collection(db, "cars"));
+        const carsData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setCars(carsData);
       } catch (error) {
         console.error("Error fetching cars:", error);
@@ -51,9 +104,21 @@ function App() {
     >
       <div className="navbar bg-base-300 rounded-box shadow-lg">
         <div className="flex-1">
-          <a className="btn btn-ghost text-xl">CarsDB</a>
+          <Link to="/" className="btn btn-ghost text-xl">
+            CarsDB
+          </Link>
         </div>
-        <div className="flex-none">
+        <div className="flex-none gap-2">
+          {isAdmin && (
+            <Link to="/admin" className="btn btn-outline btn-accent">
+              Admin
+            </Link>
+          )}
+          {currentUser && (
+            <Link to={`/user/${currentUser.uid}`} className="btn btn-outline">
+              My Profile
+            </Link>
+          )}
           {currentUser && (
             <button className="btn btn-outline" onClick={() => signOut(auth)}>
               Sign Out
@@ -62,26 +127,59 @@ function App() {
         </div>
       </div>
 
-      <div className="container mx-auto mt-8 flex flex-col items-center gap-8">
-        {isAdmin && <AdminDashboard db={db} isAdmin={isAdmin} />}
-
-        {currentUser ? (
-          loading ? (
-            <span className="loading loading-lg"></span>
-          ) : (
-            <Cars cars={cars} currentUser={currentUser} />
-          )
+      <div className="container mx-auto mt-8 flex flex-col items-center gap-8 w-full">
+        {loading ? (
+          <span className="loading loading-lg"></span>
         ) : (
-          <div className="card bg-base-200 shadow-xl p-8">
-            <h2 className="card-title mb-4">
-              Please Sign In or Create an Account
-            </h2>
-            <div className="flex flex-col md:flex-row gap-8">
-              <SignIn />
-              <div className="divider md:divider-horizontal">OR</div>
-              <SignUp />
-            </div>
-          </div>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                currentUser ? (
+                  <Cars
+                    cars={cars}
+                    currentUser={currentUser}
+                    onRatingUpdate={handleRatingUpdate}
+                    onCollectionUpdate={handleCollectionUpdate}
+                  />
+                ) : (
+                  <div className="card bg-base-200 shadow-xl p-8">
+                    <h2 className="card-title mb-4">
+                      Please Sign In or Create an Account
+                    </h2>
+                    <div className="flex flex-col md:flex-row gap-8">
+                      <SignIn />
+                      <div className="divider md:divider-horizontal">OR</div>
+                      <SignUp />
+                    </div>
+                  </div>
+                )
+              }
+            />
+
+            <Route
+              path="/user/:userId"
+              element={
+                <UserPage
+                  allCars={cars}
+                  currentUser={currentUser}
+                  onRatingUpdate={handleRatingUpdate}
+                  onCollectionUpdate={handleCollectionUpdate}
+                />
+              }
+            />
+
+            <Route
+              path="/admin"
+              element={
+                isAdmin ? (
+                  <AdminDashboard db={db} isAdmin={isAdmin} />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+          </Routes>
         )}
       </div>
     </div>

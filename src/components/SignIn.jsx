@@ -1,9 +1,9 @@
 // src/components/SignIn.js
 
 import React, { useState } from "react";
-import { auth, db } from "../firebase"; // 1. Import the 'db' instance
+import { auth, db } from "../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore"; // 2. Import firestore functions
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -23,11 +23,9 @@ const SignIn = () => {
       const user = userCredential.user;
       console.log("User signed in successfully!", user);
 
-      // 3. Check for an existing user document
       const userDocRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userDocRef);
 
-      // 4. If the document doesn't exist, create it
       if (!docSnap.exists()) {
         console.log("User document not found, creating one...");
         await setDoc(doc(db, "users", user.uid), {
@@ -39,7 +37,6 @@ const SignIn = () => {
         });
       }
 
-      // Redirect or update UI
     } catch (error) {
       console.error("Error signing in:", error);
       setError("Failed to sign in. Please check your email and password.");
