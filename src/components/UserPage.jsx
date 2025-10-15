@@ -54,7 +54,7 @@ const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) 
       <div>
         <h2 className="text-2xl font-bold mb-4 border-b pb-2">Owned Cars ({ownedCars.length})</h2>
         {ownedCars.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             {ownedCars.map(car => (
               <Car
                 key={car.id}
@@ -73,7 +73,7 @@ const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) 
       <div className="mt-12">
         <h2 className="text-2xl font-bold mb-4 border-b pb-2">Wishlist ({wishlistCars.length})</h2>
         {wishlistCars.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-8 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
             {wishlistCars.map(car => (
               <Car
                 key={car.id}
