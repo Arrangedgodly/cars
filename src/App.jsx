@@ -51,6 +51,18 @@ function App() {
     });
   };
 
+  const handleCarAdded = (newCar) => {
+    setCars((prevCars) => [...prevCars, newCar]);
+  };
+
+  const handleCarUpdated = (updatedCar) => {
+    setCars(prevCars => 
+      prevCars.map(car => 
+        car.id === updatedCar.id ? updatedCar : car
+      )
+    );
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -173,7 +185,13 @@ function App() {
               path="/admin"
               element={
                 isAdmin ? (
-                  <AdminDashboard db={db} isAdmin={isAdmin} />
+                  <AdminDashboard
+                    db={db}
+                    isAdmin={isAdmin}
+                    cars={cars}
+                    onCarAdded={handleCarAdded}
+                    onCarUpdated={handleCarUpdated}
+                  />
                 ) : (
                   <Navigate to="/" replace />
                 )

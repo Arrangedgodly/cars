@@ -85,7 +85,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
         <img src={car.image} alt={car.name} className="w-full h-30 bg-white" />
       </figure>
       <div className="card-body items-center text-center p-2">
-        <div className="tooltip w-[70%]" data-tip={car.name}>
+        <div className="tooltip w-[85%]" data-tip={car.name}>
           <h2 className="text-lg font-bold truncate">{car.name}</h2>
         </div>
         <p className="text-xs truncate">Series: {car.series}</p>
@@ -111,13 +111,13 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => handleCollectionToggle("wishlist")}
-                className="btn btn-xs btn-outline"
+                className={isInWishlist ? "btn btn-xs btn-warning" : "btn btn-xs btn-outline"}
               >
                 {isInWishlist ? "✓ In Wishlist" : "+ Wishlist"}
               </button>
               <button
                 onClick={() => handleCollectionToggle("ownedCars")}
-                className="btn btn-xs btn-outline"
+                className={isOwned ? "btn btn-xs btn-success" : "btn btn-xs btn-outline"}
               >
                 {isOwned ? "✓ Owned" : "I Own This"}
               </button>
