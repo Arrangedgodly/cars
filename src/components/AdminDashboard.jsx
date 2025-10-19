@@ -1,14 +1,25 @@
 import { useState } from "react";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+
+const seriesOptions = [
+  "Cars",
+  "Cars Toon",
+  "Cars 2",
+  "Planes",
+  "Planes: Fire and Rescue",
+  "Cars 3",
+  "Cars on the Road",
+];
 
 const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
-  const [series, setSeries] = useState("");
+  const [series, setSeries] = useState(seriesOptions[0]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [searchTerm, setSearchTerm] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
+  const [sortBy, setSortBy] = useState("name");
 
   const [editingCar, setEditingCar] = useState(null);
   const [editFormData, setEditFormData] = useState({
@@ -46,7 +57,7 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
 
       setName("");
       setImage("");
-      setSeries("");
+      setSeries(seriesOptions[0]);
     } catch (error) {
       setMessage({ type: "error", text: `Error adding car: ${error.message}` });
     } finally {
@@ -78,13 +89,38 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
 
   const sortedAndFilteredCars = [...cars]
     .sort((a, b) => {
-      if (sortDirection === "asc") {
-        return a.name.localeCompare(b.name);
-      } else {
-        return b.name.localeCompare(a.name);
+      if (sortBy === "name") {
+        if (sortDirection === "asc") {
+          return a.name.localeCompare(b.name);
+        } else {
+          return b.name.localeCompare(a.name);
+        }
       }
+
+      if (sortBy === "series") {
+        let seriesCompare;
+        if (sortDirection === "asc") {
+          seriesCompare = a.series.localeCompare(b.series);
+        } else {
+          seriesCompare = b.series.localeCompare(a.series);
+        }
+
+        if (seriesCompare !== 0) {
+          return seriesCompare;
+        }
+
+        return a.name.localeCompare(b.name);
+      }
+
+      return 0;
     })
-    .filter((car) => car.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    .filter((car) => {
+      const term = searchTerm.toLowerCase();
+      return (
+        car.name.toLowerCase().includes(term) ||
+        car.series.toLowerCase().includes(term)
+      );
+    });
 
   return (
     <div className="bg-base-300 rounded-lg shadow-xl p-8 w-full">
@@ -108,17 +144,34 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
             onChange={(e) => setImage(e.target.value)}
             className="input input-bordered w-full"
           />
-          <input
-            type="text"
-            placeholder="Car Series"
-            value={series}
-            onChange={(e) => setSeries(e.target.value)}
-            className="input input-bordered w-full"
-          />
+
+          <div className="form-control">
+            <label className="label">
+              <span className="label-text font-semibold">Series</span>
+            </label>
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
+              {seriesOptions.map((option) => (
+                <div className="form-control" key={option}>
+                  <label className="label cursor-pointer gap-2">
+                    <span className="label-text">{option}</span>
+                    <input
+                      type="radio"
+                      name="series-toggle"
+                      className="radio radio-primary"
+                      value={option}
+                      checked={series === option}
+                      onChange={(e) => setSeries(e.target.value)}
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn btn-primary w-full"
+            className="btn btn-primary w-full mt-2"
           >
             {isSubmitting ? (
               <span className="loading loading-spinner"></span>
@@ -148,11 +201,21 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
           <div className="form-control w-full max-w-xs">
             <input
               type="text"
-              placeholder="Search by car name..."
+              placeholder="Search by name or series..."
               className="input input-bordered w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+          </div>
+          <div className="form-control">
+            <select
+              className="select select-bordered"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="name">Sort by Name</option>
+              <option value="series">Sort by Series</option>
+            </select>
           </div>
           <div className="btn-group">
             <button
@@ -160,14 +223,14 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
               onClick={() => setSortDirection("asc")}
               disabled={sortDirection === "asc"}
             >
-              Sort A-Z
+              A-Z
             </button>
             <button
               className="btn"
               onClick={() => setSortDirection("desc")}
               disabled={sortDirection === "desc"}
             >
-              Sort Z-A
+              Z-A
             </button>
           </div>
         </div>
@@ -176,7 +239,8 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
           {sortedAndFilteredCars.map((car) => (
             <div
               key={car.id}
-              className="bg-base-100 p-2 rounded-lg flex items-center gap-3"
+              className="bg-base-100 p-2 rounded-lg flex items-center gap-3 tooltip tooltip-primary"
+              data-tip={car.name}
             >
               <div className="avatar">
                 <div className="w-12 rounded">
@@ -231,20 +295,35 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
                 className="input input-bordered w-full"
               />
             </div>
+
             <div className="form-control w-full mt-4">
-              <label className="label" htmlFor="edit-series">
-                <span className="label-text">Car Series</span>
+              <label className="label">
+                <span className="label-text font-semibold">Series</span>
               </label>
-              <input
-                id="edit-series"
-                type="text"
-                value={editFormData.series}
-                onChange={(e) =>
-                  setEditFormData({ ...editFormData, series: e.target.value })
-                }
-                className="input input-bordered w-full"
-              />
+              <div className="flex flex-wrap gap-x-4 gap-y-2">
+                {seriesOptions.map((option) => (
+                  <div className="form-control" key={`edit-${option}`}>
+                    <label className="label cursor-pointer gap-2">
+                      <span className="label-text">{option}</span>
+                      <input
+                        type="radio"
+                        name="edit-series-toggle"
+                        className="radio radio-primary"
+                        value={option}
+                        checked={editFormData.series === option}
+                        onChange={(e) =>
+                          setEditFormData({
+                            ...editFormData,
+                            series: e.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
+
             <div className="modal-action">
               <button type="submit" className="btn btn-primary">
                 Save Changes
