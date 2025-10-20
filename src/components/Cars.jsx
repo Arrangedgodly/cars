@@ -6,6 +6,9 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortDirection, setSortDirection] = useState("asc");
 
+  const [selectedTag, setSelectedTag] = useState(null);
+  const uniqueTags = [...new Set(cars.flatMap((car) => car.tags || []))].sort();
+
   const sortedCars = [...cars].sort((a, b) => {
     if (sortDirection === "asc") {
       return a.name.localeCompare(b.name);
@@ -14,9 +17,23 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
     }
   });
 
-  const filteredCars = sortedCars.filter((car) =>
-    car.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCars = sortedCars.filter((car) => {
+    const term = searchTerm.toLowerCase();
+    const carTags = car.tags || [];
+
+    const matchesSearch =
+      searchTerm === ""
+        ? true
+        : car.name.toLowerCase().includes(term) ||
+          car.series.toLowerCase().includes(term) ||
+          carTags.some((tag) => tag.toLowerCase().includes(term));
+
+    const matchesTag = selectedTag
+      ? carTags.includes(selectedTag)
+      : true;
+
+    return matchesSearch && matchesTag;
+  });
 
   const carsPerPage = 24;
   const lastCarIndex = currentPage * carsPerPage;
@@ -26,7 +43,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, selectedTag]);
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -70,6 +87,28 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           </button>
         </div>
       </div>
+
+      {uniqueTags.length > 0 && (
+        <div className="w-full p-4 bg-base-200 rounded-lg flex flex-wrap justify-center gap-2">
+          <button
+            className={`btn btn-sm ${!selectedTag ? "btn-primary" : "btn-ghost"}`}
+            onClick={() => setSelectedTag(null)}
+          >
+            All Cars
+          </button>
+          {uniqueTags.map((tag) => (
+            <button
+              key={tag}
+              className={`btn btn-sm ${
+                selectedTag === tag ? "btn-primary" : "btn-ghost"
+              }`}
+              onClick={() => setSelectedTag(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
         {currentCars.map((car) => (

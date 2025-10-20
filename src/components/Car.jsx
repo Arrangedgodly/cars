@@ -111,19 +111,37 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => handleCollectionToggle("wishlist")}
-                className={isInWishlist ? "btn btn-xs btn-warning" : "btn btn-xs btn-outline"}
+                className={
+                  isInWishlist
+                    ? "btn btn-xs btn-warning"
+                    : "btn btn-xs btn-outline"
+                }
               >
                 {isInWishlist ? "✓ In Wishlist" : "+ Wishlist"}
               </button>
               <button
                 onClick={() => handleCollectionToggle("ownedCars")}
-                className={isOwned ? "btn btn-xs btn-success" : "btn btn-xs btn-outline"}
+                className={
+                  isOwned ? "btn btn-xs btn-success" : "btn btn-xs btn-outline"
+                }
               >
                 {isOwned ? "✓ Owned" : "I Own This"}
               </button>
             </div>
           </div>
         )}
+      </div>
+      <div className="flex flex-wrap justify-center gap-1 mt-1.5 w-full min-h-[22px]">
+        {car.tags &&
+          car.tags.length > 0 &&
+          car.tags.map((tag) => (
+            <div
+              key={tag}
+              className={`badge badge-primary badge-xs text-white`}
+            >
+              {tag}
+            </div>
+          ))}
       </div>
     </div>
   );
