@@ -56,10 +56,21 @@ function App() {
   };
 
   const handleCarUpdated = (updatedCar) => {
-    setCars(prevCars => 
-      prevCars.map(car => 
-        car.id === updatedCar.id ? updatedCar : car
-      )
+    setCars((prevCars) =>
+      prevCars.map((car) => (car.id === updatedCar.id ? updatedCar : car))
+    );
+  };
+
+  const handleCarsTagged = (updatedCarIds, newTag) => {
+    setCars((prevCars) =>
+      prevCars.map((car) => {
+        if (updatedCarIds.includes(car.id)) {
+          const updatedTags = new Set(car.tags || []);
+          updatedTags.add(newTag);
+          return { ...car, tags: Array.from(updatedTags) };
+        }
+        return car;
+      })
     );
   };
 
@@ -191,6 +202,7 @@ function App() {
                     cars={cars}
                     onCarAdded={handleCarAdded}
                     onCarUpdated={handleCarUpdated}
+                    onCarsTagged={handleCarsTagged}
                   />
                 ) : (
                   <Navigate to="/" replace />

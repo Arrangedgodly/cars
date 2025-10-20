@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  doc,
+  updateDoc,
+  writeBatch,
+  arrayUnion,
+} from "firebase/firestore";
 
 const seriesOptions = [
   "Cars",
@@ -11,7 +18,14 @@ const seriesOptions = [
   "Cars on the Road",
 ];
 
-const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
+const AdminDashboard = ({
+  db,
+  isAdmin,
+  cars,
+  onCarAdded,
+  onCarUpdated,
+  onCarsTagged,
+}) => {
   const [name, setName] = useState("");
   const [image, setImage] = useState("");
   const [series, setSeries] = useState(seriesOptions[0]);
@@ -21,12 +35,71 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
   const [sortDirection, setSortDirection] = useState("asc");
   const [sortBy, setSortBy] = useState("name");
 
+  const [tagInput, setTagInput] = useState("");
+  const [selectedCars, setSelectedCars] = useState([]);
+  const [isSavingTags, setIsSavingTags] = useState(false);
+
   const [editingCar, setEditingCar] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     series: "",
     image: "",
   });
+
+  const handleCarSelection = (carId) => {
+    setSelectedCars((prevSelected) => {
+      // If the car is already selected, unselect it
+      if (prevSelected.includes(carId)) {
+        return prevSelected.filter((id) => id !== carId);
+      }
+      // Otherwise, add it to the selection
+      else {
+        return [...prevSelected, carId];
+      }
+    });
+  };
+
+  const handleSaveTags = async () => {
+    if (!tagInput.trim() || selectedCars.length === 0) {
+      setMessage({
+        type: "error",
+        text: "Please enter a tag and select at least one car.",
+      });
+      setTimeout(() => setMessage({ type: "", text: "" }), 5000);
+      return;
+    }
+
+    setIsSavingTags(true);
+    setMessage({ type: "", text: "" });
+    const tagToAdd = tagInput.trim();
+
+    // Use a batch write to update all documents at once
+    const batch = writeBatch(db);
+    selectedCars.forEach((carId) => {
+      const carDocRef = doc(db, "cars", carId);
+      // arrayUnion adds the tag only if it's not already present
+      batch.update(carDocRef, { tags: arrayUnion(tagToAdd) });
+    });
+
+    try {
+      await batch.commit();
+      onCarsTagged(selectedCars, tagToAdd); // Update local state in App.jsx
+      setMessage({
+        type: "success",
+        text: `Successfully added tag "${tagToAdd}" to ${selectedCars.length} cars.`,
+      });
+      setSelectedCars([]); // Clear selection
+      setTagInput(""); // Clear input
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text: `Error saving tags: ${error.message}`,
+      });
+    } finally {
+      setIsSavingTags(false);
+      setTimeout(() => setMessage({ type: "", text: "" }), 5000);
+    }
+  };
 
   const handleAddCar = async (e) => {
     e.preventDefault();
@@ -197,6 +270,45 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
           Current Car Database ({sortedAndFilteredCars.length})
         </h2>
 
+        <div className="bg-base-100 p-4 rounded-lg mb-6 shadow">
+          <h3 className="text-lg font-semibold mb-2">Tagging Tool</h3>
+          <p className="text-sm opacity-70 mb-4">
+            Enter a tag, click on cars below to select them, then save.
+          </p>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="form-control flex-grow">
+              <label className="label">
+                <span className="label-text">New Tag</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g., Racecar, Exclusive"
+                className="input input-bordered w-full"
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+              />
+            </div>
+            <button
+              className="btn btn-primary"
+              onClick={handleSaveTags}
+              disabled={isSavingTags || !tagInput || selectedCars.length === 0}
+            >
+              {isSavingTags ? (
+                <span className="loading loading-spinner"></span>
+              ) : (
+                `Save Tag to ${selectedCars.length} Cars`
+              )}
+            </button>
+            <button
+              className="btn btn-ghost"
+              onClick={() => setSelectedCars([])}
+              disabled={selectedCars.length === 0}
+            >
+              Clear Selection
+            </button>
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
           <div className="form-control w-full max-w-xs">
             <input
@@ -236,29 +348,54 @@ const AdminDashboard = ({ db, isAdmin, cars, onCarAdded, onCarUpdated }) => {
         </div>
 
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
-          {sortedAndFilteredCars.map((car) => (
-            <div
-              key={car.id}
-              className="bg-base-100 p-2 rounded-lg flex items-center gap-3 tooltip tooltip-primary"
-              data-tip={car.name}
-            >
-              <div className="avatar">
-                <div className="w-12 rounded">
-                  <img src={car.image} alt={car.name} />
+          {sortedAndFilteredCars.map((car) => {
+            const isSelected = selectedCars.includes(car.id);
+            return (
+              <div key={car.id} className="flex flex-col">
+                <div
+                  onClick={() => handleCarSelection(car.id)}
+                  className={`bg-base-100 p-2 rounded-lg flex items-center gap-3 tooltip tooltip-primary cursor-pointer transition-all w-full ${
+                    isSelected ? "ring-2 ring-accent" : "ring-0"
+                  }`}
+                  data-tip={car.name}
+                >
+                  <div className="avatar">
+                    <div className="w-12 rounded">
+                      <img src={car.image} alt={car.name} />
+                    </div>
+                  </div>
+                  <div className="flex-grow overflow-hidden">
+                    <p className="text-sm font-bold truncate">{car.name}</p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {car.series}
+                    </p>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(car);
+                    }}
+                    className="btn btn-square btn-sm flex-shrink-0"
+                  >
+                    ✏️
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-1 mt-1.5 w-full min-h-[22px]">
+                  {car.tags &&
+                    car.tags.length > 0 &&
+                    car.tags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="badge badge-info badge-xs truncate"
+                      >
+                        {tag}
+                      </div>
+                    ))}
                 </div>
               </div>
-              <div className="flex-grow overflow-hidden">
-                <p className="text-sm font-bold truncate">{car.name}</p>
-                <p className="text-xs text-gray-400 truncate">{car.series}</p>
-              </div>
-              <button
-                onClick={() => handleEditClick(car)}
-                className="btn btn-square btn-sm"
-              >
-                ✏️
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
