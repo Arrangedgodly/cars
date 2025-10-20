@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { auth, db } from "./firebase";
+import { auth, db } from "./firebase.js";
 import { Routes, Route, Link, Navigate } from "react-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import SignUp from "./components/SignUp";
-import SignIn from "./components/SignIn";
-import Cars from "./components/Cars";
-import AdminDashboard from "./components/AdminDashboard";
-import UserPage from "./components/UserPage";
+import SignUp from "./components/SignUp.jsx";
+import SignIn from "./components/SignIn.jsx";
+import Cars from "./components/Cars.jsx";
+import AdminDashboard from "./components/AdminDashboard.jsx";
+import UserPage from "./components/UserPage.jsx";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -90,6 +90,7 @@ function App() {
           setCurrentUser(combinedUser);
           setIsAdmin(firestoreUserData.isAdmin === true);
         } else {
+          // This case handles newly signed-up users who might not have a doc yet
           setCurrentUser(user);
           setIsAdmin(false);
         }
@@ -137,15 +138,19 @@ function App() {
               Admin
             </Link>
           )}
-          {currentUser && (
-            <Link to={`/user/${currentUser.uid}`} className="btn btn-outline">
-              My Profile
+          {currentUser ? (
+            <>
+              <Link to={`/user/${currentUser.uid}`} className="btn btn-outline">
+                My Profile
+              </Link>
+              <button className="btn btn-outline" onClick={() => signOut(auth)}>
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="btn btn-outline btn-primary">
+              Sign In / Sign Up
             </Link>
-          )}
-          {currentUser && (
-            <button className="btn btn-outline" onClick={() => signOut(auth)}>
-              Sign Out
-            </button>
           )}
         </div>
       </div>
@@ -158,18 +163,22 @@ function App() {
             <Route
               path="/"
               element={
+                <Cars
+                  cars={cars}
+                  currentUser={currentUser}
+                  onRatingUpdate={handleRatingUpdate}
+                  onCollectionUpdate={handleCollectionUpdate}
+                />
+              }
+            />
+
+            <Route
+              path="/login"
+              element={
                 currentUser ? (
-                  <Cars
-                    cars={cars}
-                    currentUser={currentUser}
-                    onRatingUpdate={handleRatingUpdate}
-                    onCollectionUpdate={handleCollectionUpdate}
-                  />
+                  <Navigate to="/" replace />
                 ) : (
                   <div className="card bg-base-200 shadow-xl p-8">
-                    <h2 className="card-title mb-4">
-                      Please Sign In or Create an Account
-                    </h2>
                     <div className="flex flex-col md:flex-row gap-8">
                       <SignIn />
                       <div className="divider md:divider-horizontal">OR</div>
@@ -217,3 +226,4 @@ function App() {
 }
 
 export default App;
+

@@ -32,8 +32,13 @@ const AdminDashboard = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortDirection, setSortDirection] = useState("asc");
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("name-asc");
+
+  // State for new filters
+  const [filters, setFilters] = useState({
+    tag: null,
+    series: null,
+  });
 
   const [tagInput, setTagInput] = useState("");
   const [selectedCars, setSelectedCars] = useState([]);
@@ -46,14 +51,22 @@ const AdminDashboard = ({
     image: "",
   });
 
+  // Unique values for filter dropdowns
+  const uniqueTags = [...new Set(cars.flatMap((car) => car.tags || []))].sort();
+  const uniqueSeries = [...new Set(cars.map((car) => car.series))].sort();
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters((prevFilters) => ({
+      ...prevFilters,
+      [filterType]: value || null,
+    }));
+  };
+
   const handleCarSelection = (carId) => {
     setSelectedCars((prevSelected) => {
-      // If the car is already selected, unselect it
       if (prevSelected.includes(carId)) {
         return prevSelected.filter((id) => id !== carId);
-      }
-      // Otherwise, add it to the selection
-      else {
+      } else {
         return [...prevSelected, carId];
       }
     });
@@ -73,23 +86,21 @@ const AdminDashboard = ({
     setMessage({ type: "", text: "" });
     const tagToAdd = tagInput.trim();
 
-    // Use a batch write to update all documents at once
     const batch = writeBatch(db);
     selectedCars.forEach((carId) => {
       const carDocRef = doc(db, "cars", carId);
-      // arrayUnion adds the tag only if it's not already present
       batch.update(carDocRef, { tags: arrayUnion(tagToAdd) });
     });
 
     try {
       await batch.commit();
-      onCarsTagged(selectedCars, tagToAdd); // Update local state in App.jsx
+      onCarsTagged(selectedCars, tagToAdd);
       setMessage({
         type: "success",
         text: `Successfully added tag "${tagToAdd}" to ${selectedCars.length} cars.`,
       });
-      setSelectedCars([]); // Clear selection
-      setTagInput(""); // Clear input
+      setSelectedCars([]);
+      setTagInput("");
     } catch (error) {
       setMessage({
         type: "error",
@@ -121,13 +132,9 @@ const AdminDashboard = ({
     try {
       const carsCollectionRef = collection(db, "cars");
       const newCarData = { name, image, series };
-
       const docRef = await addDoc(carsCollectionRef, newCarData);
-
       onCarAdded({ id: docRef.id, ...newCarData });
-
       setMessage({ type: "success", text: `Successfully added "${name}"!` });
-
       setName("");
       setImage("");
       setSeries(seriesOptions[0]);
@@ -152,7 +159,6 @@ const AdminDashboard = ({
     try {
       await updateDoc(carDocRef, editFormData);
       onCarUpdated({ id: editingCar.id, ...editFormData });
-
       document.getElementById("edit_car_modal").close();
       setEditingCar(null);
     } catch (error) {
@@ -161,38 +167,34 @@ const AdminDashboard = ({
   };
 
   const sortedAndFilteredCars = [...cars]
-    .sort((a, b) => {
-      if (sortBy === "name") {
-        if (sortDirection === "asc") {
-          return a.name.localeCompare(b.name);
-        } else {
-          return b.name.localeCompare(a.name);
-        }
-      }
-
-      if (sortBy === "series") {
-        let seriesCompare;
-        if (sortDirection === "asc") {
-          seriesCompare = a.series.localeCompare(b.series);
-        } else {
-          seriesCompare = b.series.localeCompare(a.series);
-        }
-
-        if (seriesCompare !== 0) {
-          return seriesCompare;
-        }
-
-        return a.name.localeCompare(b.name);
-      }
-
-      return 0;
-    })
     .filter((car) => {
       const term = searchTerm.toLowerCase();
-      return (
-        car.name.toLowerCase().includes(term) ||
-        car.series.toLowerCase().includes(term)
-      );
+      const carTags = car.tags || [];
+
+      const matchesSearch =
+        searchTerm === ""
+          ? true
+          : car.name.toLowerCase().includes(term) ||
+            car.series.toLowerCase().includes(term) ||
+            carTags.some((tag) => tag.toLowerCase().includes(term));
+
+      const matchesTag = filters.tag ? carTags.includes(filters.tag) : true;
+      const matchesSeries = filters.series
+        ? car.series === filters.series
+        : true;
+
+      return matchesSearch && matchesTag && matchesSeries;
+    })
+    .sort((a, b) => {
+      const [field, direction] = sortBy.split("-");
+      const valA = field === "series" ? a.series : a.name;
+      const valB = field === "series" ? b.series : b.name;
+
+      if (direction === "asc") {
+        return valA.localeCompare(valB);
+      } else {
+        return valB.localeCompare(valA);
+      }
     });
 
   return (
@@ -217,7 +219,6 @@ const AdminDashboard = ({
             onChange={(e) => setImage(e.target.value)}
             className="input input-bordered w-full"
           />
-
           <div className="form-control">
             <label className="label">
               <span className="label-text font-semibold">Series</span>
@@ -240,7 +241,6 @@ const AdminDashboard = ({
               ))}
             </div>
           </div>
-
           <button
             type="submit"
             disabled={isSubmitting}
@@ -269,7 +269,6 @@ const AdminDashboard = ({
         <h2 className="text-xl font-semibold mb-4">
           Current Car Database ({sortedAndFilteredCars.length})
         </h2>
-
         <div className="bg-base-100 p-4 rounded-lg mb-6 shadow">
           <h3 className="text-lg font-semibold mb-2">Tagging Tool</h3>
           <p className="text-sm opacity-70 mb-4">
@@ -308,45 +307,70 @@ const AdminDashboard = ({
             </button>
           </div>
         </div>
-
-        <div className="flex flex-wrap items-center justify-center gap-4 mb-4">
+        {/* --- CONTROLS BAR --- */}
+        <div className="flex flex-wrap items-end justify-center gap-4 mb-4 bg-base-100 p-4 rounded-lg">
           <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Search</span>
+            </label>
             <input
               type="text"
-              placeholder="Search by name or series..."
+              placeholder="Search..."
               className="input input-bordered w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="form-control">
+          <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Sort By</span>
+            </label>
             <select
               className="select select-bordered"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
-              <option value="name">Sort by Name</option>
-              <option value="series">Sort by Series</option>
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+              <option value="series-asc">Series (A-Z)</option>
+              <option value="series-desc">Series (Z-A)</option>
             </select>
           </div>
-          <div className="btn-group">
-            <button
-              className="btn"
-              onClick={() => setSortDirection("asc")}
-              disabled={sortDirection === "asc"}
+          <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Filter by Series</span>
+            </label>
+            <select
+              className="select select-bordered"
+              value={filters.series || ""}
+              onChange={(e) => handleFilterChange("series", e.target.value)}
             >
-              A-Z
-            </button>
-            <button
-              className="btn"
-              onClick={() => setSortDirection("desc")}
-              disabled={sortDirection === "desc"}
+              <option value="">All Series</option>
+              {uniqueSeries.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Filter by Tag</span>
+            </label>
+            <select
+              className="select select-bordered"
+              value={filters.tag || ""}
+              onChange={(e) => handleFilterChange("tag", e.target.value)}
             >
-              Z-A
-            </button>
+              <option value="">All Tags</option>
+              {uniqueTags.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
-
         <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-4 mt-4">
           {sortedAndFilteredCars.map((car) => {
             const isSelected = selectedCars.includes(car.id);
@@ -382,27 +406,23 @@ const AdminDashboard = ({
                 </div>
 
                 <div className="flex flex-wrap gap-1 mt-1.5 w-full min-h-[22px]">
-                  {car.tags &&
-                    car.tags.length > 0 &&
-                    car.tags.map((tag) => (
-                      <div
-                        key={tag}
-                        className="badge badge-info badge-xs truncate"
-                      >
-                        {tag}
-                      </div>
-                    ))}
+                  {car.tags?.map((tag) => (
+                    <div
+                      key={tag}
+                      className="badge badge-info badge-xs truncate"
+                    >
+                      {tag}
+                    </div>
+                  ))}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
-
       <dialog id="edit_car_modal" className="modal">
         <div className="modal-box">
           <h3 className="font-bold text-lg">Edit Car: {editingCar?.name}</h3>
-
           <form onSubmit={handleUpdateCar} className="py-4">
             <div className="form-control w-full">
               <label className="label" htmlFor="edit-name">
@@ -432,7 +452,6 @@ const AdminDashboard = ({
                 className="input input-bordered w-full"
               />
             </div>
-
             <div className="form-control w-full mt-4">
               <label className="label">
                 <span className="label-text font-semibold">Series</span>
@@ -460,7 +479,6 @@ const AdminDashboard = ({
                 ))}
               </div>
             </div>
-
             <div className="modal-action">
               <button type="submit" className="btn btn-primary">
                 Save Changes
