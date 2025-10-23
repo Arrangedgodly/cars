@@ -4,27 +4,24 @@ import Car from "./Car";
 const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
-  // State now only tracks name sorting
   const [sortBy, setSortBy] = useState("name-asc");
-  // New state to hold all filters
   const [filters, setFilters] = useState({
-    tag: null,
-    series: null,
+    tags: [],
+    series: [],
   });
+  const [userCollectionFilter, setUserCollectionFilter] = useState("all");
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Derive unique tags and series from the car list
   const uniqueTags = [...new Set(cars.flatMap((car) => car.tags || []))].sort();
   const uniqueSeries = [
     ...new Set(cars.flatMap((car) => car.series || [])),
   ].sort();
 
-  // 1. Filter the cars based on search and filters state
   const filteredCars = cars.filter((car) => {
     const term = searchTerm.toLowerCase();
     const carTags = car.tags || [];
     const carSeries = car.series || "";
 
-    // Search term logic (matches name, series, or any tag)
     const matchesSearch =
       searchTerm === ""
         ? true
@@ -32,16 +29,44 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           car.series.toLowerCase().includes(term) ||
           carTags.some((tag) => tag.toLowerCase().includes(term));
 
-    // Filter logic
-    const matchesTag = filters.tag ? carTags.includes(filters.tag) : true;
-    const matchesSeries = filters.series ? carSeries === filters.series : true;
+    const matchesSeries =
+      filters.series.length === 0
+        ? true
+        : filters.series.includes(carSeries);
+    const matchesTag =
+      filters.tags.length === 0
+        ? true
+        : carTags.some((tag) => filters.tags.includes(tag));
 
-    return matchesSearch && matchesTag && matchesSeries;
+    const matchesUserCollection = () => {
+      if (!currentUser) return true;
+      if (userCollectionFilter === "owned") {
+        return currentUser.ownedCars?.includes(car.id);
+      }
+      if (userCollectionFilter === "wishlist") {
+        return currentUser.wishlist?.includes(car.id);
+      }
+      return true;
+    };
+
+    return (
+      matchesSearch &&
+      matchesSeries &&
+      matchesTag &&
+      matchesUserCollection()
+    );
   });
 
-  // 2. Sort the *filtered* list (Simplified)
   const sortedCars = [...filteredCars].sort((a, b) => {
-    const direction = sortBy.split("-")[1];
+    const [field, direction] = sortBy.split("-");
+
+    if (field === "rating") {
+      const getAvg = (car) =>
+        car.ratingCount > 0 ? car.totalRatingScore / car.ratingCount : 0;
+      const ratingA = getAvg(a);
+      const ratingB = getAvg(b);
+      return direction === "asc" ? ratingA - ratingB : ratingB - ratingA;
+    }
 
     if (direction === "asc") {
       return a.name.localeCompare(b.name);
@@ -50,28 +75,48 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
     }
   });
 
-  // 3. Paginate the *sorted* list
   const carsPerPage = 24;
   const lastCarIndex = currentPage * carsPerPage;
   const firstCarIndex = lastCarIndex - carsPerPage;
   const currentCars = sortedCars.slice(firstCarIndex, lastCarIndex);
   const totalPages = Math.ceil(sortedCars.length / carsPerPage) || 1;
 
-  // Reset to page 1 if search, filters, or sorting changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, filters, sortBy]);
+  }, [searchTerm, filters, sortBy, userCollectionFilter]);
 
-  const handleFilterChange = (filterType, value) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      [filterType]: value || null, // Set to null if value is empty string
-    }));
+  const handleFilterChange = (filterType, value, isChecked) => {
+    setFilters((prevFilters) => {
+      const currentValues = prevFilters[filterType];
+      let newValues = [];
+
+      if (isChecked) {
+        newValues = [...currentValues, value];
+      } else {
+        newValues = currentValues.filter((item) => item !== value);
+      }
+
+      return {
+        ...prevFilters,
+        [filterType]: newValues,
+      };
+    });
   };
 
   const clearFilters = () => {
-    setFilters({ tag: null, series: null });
+    setFilters({ tags: [], series: [] });
+    setSearchTerm("");
+    setSortBy("name-asc");
+    setUserCollectionFilter("all");
+    setShowFilters(false);
   };
+
+  const activeFilterCount =
+    filters.tags.length + filters.series.length;
+  const hasActiveFilters =
+    activeFilterCount > 0 ||
+    searchTerm !== "" ||
+    userCollectionFilter !== "all";
 
   const handleNextPage = () => {
     if (currentPage < totalPages) {
@@ -87,76 +132,25 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
 
   return (
     <div className="flex flex-col items-center w-full">
-      <div className="flex">
-        {/* Filter Dropdown */}
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text invisible">Filters</span>
-          </label>
-          <div className="dropdown dropdown-end">
-            <label tabIndex={0} className="btn m-1">
-              Filters
-              {(filters.tag || filters.series) && (
-                <div className="badge badge-secondary ml-2">!</div>
-              )}
-            </label>
-            <div
-              tabIndex={0}
-              className="dropdown-content z-[1] menu p-4 shadow bg-base-300 rounded-box w-72"
+      {/* ### START CONTROLS BAR ### */}
+      <div className="w-200 bg-zinc-800 p-4 rounded-lg shadow-lg mb-8">
+        {/* Top row of controls */}
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center items-center sm:items-end gap-2">
+          {/* Filter Toggle Button */}
+          <div className="form-control w-30 max-w-xs text-sm">
+            <button
+              className={`btn w-full ${showFilters ? "btn-primary" : "btn-outline"}`}
+              onClick={() => setShowFilters(!showFilters)}
             >
-              {/* Series Filter */}
-              <div className="form-control w-full mb-4">
-                <label className="label">
-                  <span className="label-text">Filter by Series</span>
-                </label>
-                <select
-                  className="select select-bordered"
-                  value={filters.series || ""}
-                  onChange={(e) => handleFilterChange("series", e.target.value)}
-                >
-                  <option value="">All Series</option>
-                  {uniqueSeries.map((series) => (
-                    <option key={series} value={series}>
-                      {series}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Tag Filter */}
-              {uniqueTags.length > 0 && (
-                <div className="form-control w-full mb-4">
-                  <label className="label">
-                    <span className="label-text">Filter by Tag</span>
-                  </label>
-                  <select
-                    className="select select-bordered"
-                    value={filters.tag || ""}
-                    onChange={(e) => handleFilterChange("tag", e.target.value)}
-                  >
-                    <option value="">All Tags</option>
-                    {uniqueTags.map((tag) => (
-                      <option key={tag} value={tag}>
-                        {tag}
-                      </option>
-                    ))}
-                  </select>
+              {showFilters ? "Hide" : "Filters"}
+              {activeFilterCount > 0 && (
+                <div className="badge badge-secondary ml-2">
+                  {activeFilterCount}
                 </div>
               )}
-
-              {/* Clear Filters Button */}
-              <button
-                className="btn btn-ghost btn-sm mt-2"
-                onClick={clearFilters}
-                disabled={!filters.tag && !filters.series}
-              >
-                Clear All Filters
-              </button>
-            </div>
+            </button>
           </div>
-        </div>
-        {/* CONTROLS BAR */}
-        <div className="flex items-end justify-center gap-4 w-full mb-4">
+          
           {/* Search Input */}
           <div className="form-control w-full max-w-xs">
             <label className="label">
@@ -171,8 +165,8 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
             />
           </div>
 
-          {/* Sort Dropdown (Simplified) */}
-          <div className="form-control w-full max-w-xs">
+          {/* Sort Dropdown */}
+          <div className="form-control w-30 max-w-xs">
             <label className="label">
               <span className="label-text">Sort By</span>
             </label>
@@ -183,10 +177,91 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
             >
               <option value="name-asc">Name (A-Z)</option>
               <option value="name-desc">Name (Z-A)</option>
+              <option value="rating-desc">Rating (High to Low)</option>
+              <option value="rating-asc">Rating (Low to High)</option>
+            </select>
+          </div>
+
+          {/* User Collection Filter */}
+          <div className="form-control w-30 max-w-xs">
+            <label className="label">
+              <span className="label-text">Show</span>
+            </label>
+            <select
+              className="select select-bordered"
+              value={userCollectionFilter}
+              onChange={(e) => setUserCollectionFilter(e.target.value)}
+              disabled={!currentUser}
+            >
+              <option value="all">All Cars</option>
+              <option value="owned">My Owned</option>
+              <option value="wishlist">My Wishlist</option>
             </select>
           </div>
         </div>
+
+        {/* --- START EXPANDABLE FILTER AREA --- */}
+        {showFilters && (
+          <div className="mt-6 pt-4 border-t border-zinc-700">
+            {/* Series Filters */}
+            <h4 className="font-semibold mb-2">Series</h4>
+            <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              {uniqueSeries.map((series) => (
+                <label
+                  key={series}
+                  className="label cursor-pointer p-0 justify-start gap-2"
+                >
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-sm"
+                    checked={filters.series.includes(series)}
+                    onChange={(e) =>
+                      handleFilterChange("series", series, e.target.checked)
+                    }
+                  />
+                  <span className="label-text truncate">{series}</span>
+                </label>
+              ))}
+            </div>
+
+            {/* Tag Filters */}
+            {uniqueTags.length > 0 && (
+              <>
+                <h4 className="font-semibold mt-4 mb-2">Tags</h4>
+                <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  {uniqueTags.map((tag) => (
+                    <label
+                      key={tag}
+                      className="label cursor-pointer p-0 justify-start gap-2"
+                    >
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-sm"
+                        checked={filters.tags.includes(tag)}
+                        onChange={(e) =>
+                          handleFilterChange("tags", tag, e.target.checked)
+                        }
+                      />
+                      <span className="label-text truncate">{tag}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        {/* --- END EXPANDABLE FILTER AREA --- */}
+
+        {/* Clear Filters Button */}
+        {hasActiveFilters && (
+          <div className="text-center mt-4 pt-4 border-t border-zinc-700">
+            <button className="btn btn-ghost btn-sm" onClick={clearFilters}>
+              Clear All Filters & Search
+            </button>
+          </div>
+        )}
       </div>
+      {/* ### END CONTROLS BAR ### */}
 
       {/* CARS GRID */}
       {currentCars.length > 0 ? (
@@ -206,8 +281,8 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
       )}
 
       {/* PAGINATION */}
-      {currentCars.length > 0 && (
-        <div className="join">
+      {totalPages > 1 && (
+        <div className="join mt-8">
           <button
             className="join-item btn"
             onClick={handlePrevPage}

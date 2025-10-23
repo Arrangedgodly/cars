@@ -18,6 +18,13 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   const isInWishlist = currentUser?.wishlist?.includes(car.id);
   const isOwned = currentUser?.ownedCars?.includes(car.id);
 
+  // Determine the card's background color based on its status
+  const cardBgClass = isOwned
+    ? "bg-green-900"
+    : isInWishlist
+    ? "bg-amber-900"
+    : "bg-zinc-500";
+
   const handleSetRating = async (newRating) => {
     if (!currentUser) return;
 
@@ -81,7 +88,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="card bg-zinc-500 w-50">
+      <div className={`card ${cardBgClass} w-50 transition-colors duration-300`}>
         <figure>
           <img
             src={car.image}
@@ -93,9 +100,10 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           <div className="tooltip w-full" data-tip={car.name}>
             <h2 className="text-lg font-bold truncate">{car.name}</h2>
           </div>
-          <p className="text-xs truncate">Series: {car.series}</p>
-
-          <div className="mt-1 text-center stats">
+          <div className="tooltip w-full" data-tip={car.series}>
+            <p className="text-xs truncate">Series: {car.series}</p>
+          </div>
+          <div className="mt-1 text-center stats stats-vertical bg-transparent">
             <div className="stat">
               <p className="stat-title">Average Ranking</p>
               <p className="font-semibold stat-value">

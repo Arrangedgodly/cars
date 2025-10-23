@@ -128,27 +128,27 @@ function App() {
     >
       <div className="navbar bg-zinc-800 rounded-box shadow-lg">
         <div className="flex-1">
-          <Link to="/" className="btn btn-ghost text-xl">
+          <Link to="/" className="btn btn-ghost text-xl text-zinc-100 btn-sm">
             CarsDB
           </Link>
         </div>
-        <div className="flex-none gap-2">
+        <div className="flex gap-4">
           {isAdmin && (
-            <Link to="/admin" className="btn btn-outline btn-accent">
+            <Link to="/admin" className="btn btn-outline btn-accent btn-sm">
               Admin
             </Link>
           )}
           {currentUser ? (
             <>
-              <Link to={`/user/${currentUser.uid}`} className="btn btn-outline">
+              <Link to={`/user/${currentUser.uid}`} className="btn btn-outline text-zinc-100 btn-sm">
                 My Profile
               </Link>
-              <button className="btn btn-outline" onClick={() => signOut(auth)}>
+              <button className="btn btn-outline text-zinc-100 btn-sm" onClick={() => signOut(auth)}>
                 Sign Out
               </button>
             </>
           ) : (
-            <Link to="/login" className="btn btn-outline btn-primary">
+            <Link to="/login" className="btn btn-outline btn-primary btn-sm">
               Sign In / Sign Up
             </Link>
           )}
