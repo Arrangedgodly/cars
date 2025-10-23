@@ -88,7 +88,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className={`card ${cardBgClass} w-50 transition-colors duration-300`}>
+      <div className={`card ${cardBgClass} w-40 lg:w-50 transition-colors duration-300`}>
         <figure>
           <img
             src={car.image}
@@ -100,9 +100,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           <div className="tooltip w-full" data-tip={car.name}>
             <h2 className="text-lg font-bold truncate">{car.name}</h2>
           </div>
-          <div className="tooltip w-full" data-tip={car.series}>
-            <p className="text-xs truncate">Series: {car.series}</p>
-          </div>
+            <p className="text-xs truncate italic w-[85%]">{car.series}</p>
           <div className="mt-1 text-center stats stats-vertical bg-transparent">
             <div className="stat">
               <p className="stat-title">Average Ranking</p>
@@ -124,7 +122,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
                 carId={car.id}
               />
 
-              <div className="flex gap-2 mt-4">
+              <div className="flex flex-col gap-2 mt-4 w-full">
                 <button
                   onClick={() => handleCollectionToggle("wishlist")}
                   className={

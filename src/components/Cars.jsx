@@ -133,7 +133,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   return (
     <div className="flex flex-col items-center w-full">
       {/* ### START CONTROLS BAR ### */}
-      <div className="w-200 bg-zinc-800 p-4 rounded-lg shadow-lg mb-8">
+      <div className="w-[75vw] bg-zinc-800 p-4 rounded-lg shadow-lg mb-8">
         {/* Top row of controls */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center items-center sm:items-end gap-2">
           {/* Filter Toggle Button */}
@@ -205,7 +205,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           <div className="mt-6 pt-4 border-t border-zinc-700">
             {/* Series Filters */}
             <h4 className="font-semibold mb-2">Series</h4>
-            <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {uniqueSeries.map((series) => (
                 <label
                   key={series}
@@ -228,7 +228,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
             {uniqueTags.length > 0 && (
               <>
                 <h4 className="font-semibold mt-4 mb-2">Tags</h4>
-                <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2">
                   {uniqueTags.map((tag) => (
                     <label
                       key={tag}
