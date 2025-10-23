@@ -18,7 +18,23 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   const isInWishlist = currentUser?.wishlist?.includes(car.id);
   const isOwned = currentUser?.ownedCars?.includes(car.id);
 
-  // Determine the card's background color based on its status
+  const getTagColor = (tagString) => {
+  if (!tagString) return "hsl(0, 0%, 50%)";
+
+  let hash = 0;
+  for (let i = 0; i < tagString.length; i++) {
+    const char = tagString.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash = hash & hash;
+  }
+  
+  const hue = Math.abs(hash) % 360;
+  const saturation = 70;
+  const lightness = 50;
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
   const cardBgClass = isOwned
     ? "bg-green-900"
     : isInWishlist
@@ -87,8 +103,10 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   };
 
   return (
-    <div className="flex flex-col items-center">
-      <div className={`card ${cardBgClass} w-40 lg:w-50 transition-colors duration-300`}>
+    <div className="flex flex-col items-center h-full">
+      <div
+        className={`card ${cardBgClass} w-40 lg:w-50 transition-colors duration-300 flex-grow`}
+      >
         <figure>
           <img
             src={car.image}
@@ -97,10 +115,8 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           />
         </figure>
         <div className="card-body items-center text-center gap-0 p-2">
-          <div className="tooltip w-full" data-tip={car.name}>
-            <h2 className="text-lg font-bold truncate">{car.name}</h2>
-          </div>
-            <p className="text-xs truncate italic w-[85%]">{car.series}</p>
+          <h2 className="text-lg font-bold text-wrap">{car.name}</h2>
+          <p className="text-xs text-balance italic w-[85%]">{car.series}</p>
           <div className="mt-1 text-center stats stats-vertical bg-transparent">
             <div className="stat">
               <p className="stat-title">Average Ranking</p>
@@ -154,7 +170,8 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           car.tags.map((tag) => (
             <div
               key={tag}
-              className={`badge badge-primary badge-xs text-white`}
+              className="badge badge-xs text-white"
+              style={{ backgroundColor: getTagColor(tag) }}
             >
               {tag}
             </div>

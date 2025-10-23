@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useParams } from 'react-router';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
-import Car from './Car';
+import { useState, useEffect } from "react";
+import { useParams } from "react-router";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import Car from "./Car";
 
-const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
+const UserPage = ({
+  allCars,
+  currentUser,
+  onRatingUpdate,
+  onCollectionUpdate,
+}) => {
   const { userId } = useParams();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,21 +18,21 @@ const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) 
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) return;
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
-        const userDocRef = doc(db, 'users', userId);
+        const userDocRef = doc(db, "users", userId);
         const userDocSnap = await getDoc(userDocRef);
 
         if (userDocSnap.exists()) {
           setUserData(userDocSnap.data());
         } else {
-          setError('User not found.');
+          setError("User not found.");
         }
       } catch (err) {
-        setError('Failed to fetch user data.');
+        setError("Failed to fetch user data.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -37,10 +42,20 @@ const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) 
     fetchUserData();
   }, [userId]);
 
-  const wishlistCars = allCars.filter(car => userData?.wishlist?.includes(car.id));
-  const ownedCars = allCars.filter(car => userData?.ownedCars?.includes(car.id));
+  const wishlistCars = allCars
+    .filter((car) => userData?.wishlist?.includes(car.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
-  if (loading) return <div className="text-center"><span className="loading loading-lg"></span></div>;
+  const ownedCars = allCars
+    .filter((car) => userData?.ownedCars?.includes(car.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  if (loading)
+    return (
+      <div className="text-center">
+        <span className="loading loading-lg"></span>
+      </div>
+    );
   if (error) return <div className="text-center text-error">{error}</div>;
   if (!userData) return null;
 
@@ -52,10 +67,12 @@ const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) 
       </div>
 
       <div>
-        <h2 className="text-2xl font-bold mb-4 border-b pb-2">Owned Cars ({ownedCars.length})</h2>
+        <h2 className="text-2xl font-bold mb-4 border-b pb-2">
+          Owned Cars ({ownedCars.length})
+        </h2>
         {ownedCars.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-            {ownedCars.map(car => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {ownedCars.map((car) => (
               <Car
                 key={car.id}
                 car={car}
@@ -71,10 +88,12 @@ const UserPage = ({ allCars, currentUser, onRatingUpdate, onCollectionUpdate }) 
       </div>
 
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-4 border-b pb-2">Wishlist ({wishlistCars.length})</h2>
+        <h2 className="text-2xl font-bold mb-4 border-b pb-2">
+          Wishlist ({wishlistCars.length})
+        </h2>
         {wishlistCars.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-            {wishlistCars.map(car => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {wishlistCars.map((car) => (
               <Car
                 key={car.id}
                 car={car}
