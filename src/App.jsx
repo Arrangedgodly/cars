@@ -123,10 +123,10 @@ function App() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center bg-base-100 text-base-content p-4"
+      className="min-h-screen w-full flex flex-col items-center bg-zinc-900 text-base-content p-4"
       data-theme="cyberpunk"
     >
-      <div className="navbar bg-base-300 rounded-box shadow-lg">
+      <div className="navbar bg-zinc-800 rounded-box shadow-lg">
         <div className="flex-1">
           <Link to="/" className="btn btn-ghost text-xl">
             CarsDB

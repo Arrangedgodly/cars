@@ -86,38 +86,8 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   };
 
   return (
-    <div className="flex flex-col items-center w-full gap-8">
-      {/* CONTROLS BAR */}
-      <div className="flex flex-wrap items-end justify-center gap-4 w-full">
-        {/* Search Input */}
-        <div className="form-control w-full max-w-xs">
-          <label className="label">
-            <span className="label-text">Search</span>
-          </label>
-          <input
-            type="text"
-            placeholder="Search by name, series, tag..."
-            className="input input-bordered w-full"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Sort Dropdown (Simplified) */}
-        <div className="form-control w-full max-w-xs">
-          <label className="label">
-            <span className="label-text">Sort By</span>
-          </label>
-          <select
-            className="select select-bordered"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="name-asc">Name (A-Z)</option>
-            <option value="name-desc">Name (Z-A)</option>
-          </select>
-        </div>
-
+    <div className="flex flex-col items-center w-full">
+      <div className="flex">
         {/* Filter Dropdown */}
         <div className="form-control">
           <label className="label">
@@ -183,6 +153,37 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
                 Clear All Filters
               </button>
             </div>
+          </div>
+        </div>
+        {/* CONTROLS BAR */}
+        <div className="flex items-end justify-center gap-4 w-full mb-4">
+          {/* Search Input */}
+          <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Search</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Search by name, series, tag..."
+              className="input input-bordered w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          {/* Sort Dropdown (Simplified) */}
+          <div className="form-control w-full max-w-xs">
+            <label className="label">
+              <span className="label-text">Sort By</span>
+            </label>
+            <select
+              className="select select-bordered"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="name-asc">Name (A-Z)</option>
+              <option value="name-desc">Name (Z-A)</option>
+            </select>
           </div>
         </div>
       </div>

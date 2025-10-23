@@ -80,58 +80,69 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   };
 
   return (
-    <div className="card bg-slate-500">
-      <figure>
-        <img src={car.image} alt={car.name} className="w-full h-30 bg-white" />
-      </figure>
-      <div className="card-body items-center text-center p-2">
-        <div className="tooltip w-[85%]" data-tip={car.name}>
-          <h2 className="text-lg font-bold truncate">{car.name}</h2>
-        </div>
-        <p className="text-xs truncate">Series: {car.series}</p>
+    <div className="flex flex-col items-center">
+      <div className="card bg-zinc-500 w-50">
+        <figure>
+          <img
+            src={car.image}
+            alt={car.name}
+            className="w-full h-30 bg-white object-cover"
+          />
+        </figure>
+        <div className="card-body items-center text-center gap-0 p-2">
+          <div className="tooltip w-full" data-tip={car.name}>
+            <h2 className="text-lg font-bold truncate">{car.name}</h2>
+          </div>
+          <p className="text-xs truncate">Series: {car.series}</p>
 
-        <div className="mt-2 text-center">
-          <p className="text-sm font-semibold">
-            ⭐ {averageRating}
-            <span className="text-xs font-normal ml-1">
-              ({car.ratingCount || 0} votes)
-            </span>
-          </p>
-        </div>
-
-        {currentUser && (
-          <div className="card-actions justify-center w-full mt-4 border-t border-slate-600 pt-4">
-            <p className="text-xs mb-1">Your Rating:</p>
-            <StarRating
-              rating={userRating}
-              onRatingChange={handleSetRating}
-              carId={car.id}
-            />
-
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => handleCollectionToggle("wishlist")}
-                className={
-                  isInWishlist
-                    ? "btn btn-xs btn-warning"
-                    : "btn btn-xs btn-outline"
-                }
-              >
-                {isInWishlist ? "✓ In Wishlist" : "+ Wishlist"}
-              </button>
-              <button
-                onClick={() => handleCollectionToggle("ownedCars")}
-                className={
-                  isOwned ? "btn btn-xs btn-success" : "btn btn-xs btn-outline"
-                }
-              >
-                {isOwned ? "✓ Owned" : "I Own This"}
-              </button>
+          <div className="mt-1 text-center stats">
+            <div className="stat">
+              <p className="stat-title">Average Ranking</p>
+              <p className="font-semibold stat-value">
+                ⭐ {averageRating}
+                <span className="ml-1 stat-desc">
+                  ({car.ratingCount || 0} votes)
+                </span>
+              </p>
             </div>
           </div>
-        )}
+
+          {currentUser && (
+            <div className="card-actions justify-center w-full mt-1 border-t border-slate-600 p-1">
+              <p className="text-xs mb-1 w-full">Your Rating:</p>
+              <StarRating
+                rating={userRating}
+                onRatingChange={handleSetRating}
+                carId={car.id}
+              />
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => handleCollectionToggle("wishlist")}
+                  className={
+                    isInWishlist
+                      ? "btn btn-xs btn-warning"
+                      : "btn btn-xs btn-outline"
+                  }
+                >
+                  {isInWishlist ? "✓ In Wishlist" : "+ Wishlist"}
+                </button>
+                <button
+                  onClick={() => handleCollectionToggle("ownedCars")}
+                  className={
+                    isOwned
+                      ? "btn btn-xs btn-success"
+                      : "btn btn-xs btn-outline"
+                  }
+                >
+                  {isOwned ? "✓ Owned" : "I Own This"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="flex flex-wrap justify-center gap-1 mt-1.5 w-full min-h-[22px]">
+      <div className="flex flex-wrap justify-center gap-1 mt-2 w-full min-h-[22px]">
         {car.tags &&
           car.tags.length > 0 &&
           car.tags.map((tag) => (

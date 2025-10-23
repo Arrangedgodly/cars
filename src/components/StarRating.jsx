@@ -8,7 +8,7 @@ const StarRating = ({ rating, onRatingChange, carId, readOnly = false }) => {
   };
 
   return (
-    <div className="rating rating-md rating-half">
+    <div className="rating rating-lg rating-half">
       <input
         type="radio"
         name={`rating-${carId}`}
