@@ -28,3 +28,4 @@ dist-ssr
 scripts/images/
 scripts/serviceAccountKey.json
 .venv
+.env
