@@ -32,7 +32,7 @@ def download_image(doc_id, url, base_filename, directory):
     On failure: (False, error_message)
     """
     try:
-        # **NEW**: Add a User-Agent header to mimic a browser
+        # Add a User-Agent header to mimic a browser
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
         }
@@ -85,12 +85,12 @@ def main():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     print(f"Output directory '{OUTPUT_DIR}' is ready.")
 
-    # **NEW**: Lists to track successes and failures
+    # 3. Lists to track successes and failures
     successful_downloads = []
     failed_downloads = []
     doc_count = 0
 
-    # 3. Get all documents from the 'cars' collection
+    # 4. Get all documents from the 'cars' collection
     try:
         cars_ref = db.collection(COLLECTION_NAME)
         docs = cars_ref.stream()
