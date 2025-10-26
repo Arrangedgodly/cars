@@ -1,3 +1,11 @@
+"""
+download_images.py 
+
+Iterates over the cars collection in the firestore db and downloads the images to the ./images directory 
+
+Images use their firestore doc id as their name
+"""
+
 import os
 import re
 import mimetypes
