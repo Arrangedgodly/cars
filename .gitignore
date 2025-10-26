@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+
+# Python Scripts
+scripts/images/
+scripts/serviceAccountKey.json
+.venv
+.env
