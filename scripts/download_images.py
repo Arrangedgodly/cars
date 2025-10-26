@@ -118,10 +118,7 @@ def main():
 
             print(f"\nProcessing document: {doc.id} (Name: {name})")
 
-            # 4. Create filename and download
-            safe_name = sanitize_filename(name)
-            safe_series = sanitize_filename(str(series))
-            base_filename = f"{safe_name}-{safe_series}"
+            base_filename = doc.id
             
             # 5. Check return value and log success/failure
             success, message = download_image(doc.id, image_url, base_filename, OUTPUT_DIR)
