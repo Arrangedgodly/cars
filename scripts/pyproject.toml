@@ -1,0 +1,10 @@
+[project]
+name = "cars"
+version = "0.1.0"
+description = "A site for managing cars collections"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "firebase-admin>=7.1.0",
+    "requests>=2.32.5",
+]
