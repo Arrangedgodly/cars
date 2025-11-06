@@ -409,7 +409,7 @@ const AdminDashboard = ({
                 >
                   <div className="avatar">
                     <div className="w-12 rounded">
-                      <img src={car.image} alt={car.name} />
+                      <img src={car.cloudinary ? car.cloudinary.secure_url : car.image} alt={car.name} />
                     </div>
                   </div>
                   <div className="flex-grow overflow-hidden">
