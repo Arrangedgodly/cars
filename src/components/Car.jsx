@@ -109,7 +109,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
       >
         <figure>
           <img
-            src={car.image}
+            src={car.cloudinary.secure_url}
             alt={car.name}
             className="w-full h-30 bg-white object-cover"
           />
