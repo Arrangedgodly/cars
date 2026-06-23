@@ -114,15 +114,15 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
             className="w-full h-30 bg-white object-cover"
           />
         </figure>
-        <div className="card-body items-center text-center gap-0 p-2">
-          <h2 className="text-lg font-bold text-wrap">{car.name}</h2>
-          <p className="text-xs text-balance italic w-[85%]">{car.series}</p>
-          <div className="mt-1 text-center stats stats-vertical bg-transparent">
-            <div className="stat">
+        <div className="card-body items-center text-center gap-0 p-1 w-full">
+          <h2 className="text-[14px] font-bold text-wrap w-full">{car.name}</h2>
+          <p className="text-xs text-balance italic w-full">{car.series}</p>
+          <div className="text-center stats stats-vertical bg-transparent">
+            <div className="stat p-1">
               <p className="stat-title">Average Ranking</p>
-              <p className="font-semibold stat-value">
+              <p className="font-semibold stat-value text-[14px]">
                 ⭐ {averageRating}
-                <span className="ml-1 stat-desc">
+                <span className="ml-1 stat-desc text-[10px]">
                   ({car.ratingCount || 0} votes)
                 </span>
               </p>
@@ -130,31 +130,31 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           </div>
 
           {currentUser && (
-            <div className="card-actions justify-center w-full mt-1 border-t border-slate-600 p-1">
-              <p className="text-xs mb-1 w-full">Your Rating:</p>
+            <div className="card-actions justify-center w-full mt-1 border-t border-slate-600 pb-1">
+              <p className="text-xs w-full">Your Rating:</p>
               <StarRating
                 rating={userRating}
                 onRatingChange={handleSetRating}
                 carId={car.id}
               />
 
-              <div className="flex flex-col gap-2 mt-4 w-full">
+              <div className="flex mt-1 gap-1 w-full justify-center">
                 <button
                   onClick={() => handleCollectionToggle("wishlist")}
                   className={
                     isInWishlist
-                      ? "btn btn-xs btn-warning"
-                      : "btn btn-xs btn-outline"
+                      ? "btn btn-xs text-[10px] btn-warning"
+                      : "btn btn-xs text-[10px] btn-outline"
                   }
                 >
-                  {isInWishlist ? "✓ In Wishlist" : "+ Wishlist"}
+                  {isInWishlist ? "✓ Wishlist" : "+ Wishlist"}
                 </button>
                 <button
                   onClick={() => handleCollectionToggle("ownedCars")}
                   className={
                     isOwned
-                      ? "btn btn-xs btn-success"
-                      : "btn btn-xs btn-outline"
+                      ? "btn btn-xs text-[10px] btn-success"
+                      : "btn btn-xs text-[10px] btn-outline"
                   }
                 >
                   {isOwned ? "✓ Owned" : "I Own This"}
@@ -164,7 +164,7 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           )}
         </div>
       </div>
-      <div className="flex flex-wrap justify-center gap-1 mt-2 w-full min-h-[22px]">
+      <div className="flex flex-wrap justify-center gap-1 w-full min-h-[22px]">
         {car.tags &&
           car.tags.length > 0 &&
           car.tags.map((tag) => (
