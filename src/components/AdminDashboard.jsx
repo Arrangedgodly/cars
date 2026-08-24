@@ -222,9 +222,12 @@ const AdminDashboard = ({
     });
 
   return (
-    <div className="bg-base-300 rounded-lg shadow-xl p-8 w-full">
+    <div className="bg-base-300 border border-base-content/10 rounded-box shadow-xl p-6 sm:p-8 w-full">
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="font-fancy text-xs uppercase tracking-wider text-base-content/50 mb-1">
+          Internal Only
+        </p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-base-content">Admin Dashboard</h1>
       </div>
       <div className="border-t border-base-100 pt-6">
         <h2 className="text-xl font-semibold mb-4">Add a New Car</h2>
@@ -247,7 +250,7 @@ const AdminDashboard = ({
             <label className="label">
               <span className="label-text font-semibold">Series</span>
             </label>
-            <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 max-h-40 overflow-y-auto p-3 bg-base-100 border border-base-content/10 rounded-lg">
               {seriesOptions.map((option) => (
                 <div className="form-control" key={option}>
                   <label className="label cursor-pointer gap-2">
@@ -268,7 +271,7 @@ const AdminDashboard = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn btn-primary w-full mt-2"
+            className="btn btn-primary btn-gradient-primary w-full mt-2"
           >
             {isSubmitting ? (
               <span className="loading loading-spinner"></span>
@@ -312,7 +315,7 @@ const AdminDashboard = ({
               />
             </div>
             <button
-              className="btn btn-primary"
+              className="btn btn-primary btn-gradient-primary"
               onClick={handleSaveTags}
               disabled={isSavingTags || !tagInput || selectedCars.length === 0}
             >
@@ -480,7 +483,7 @@ const AdminDashboard = ({
               <label className="label">
                 <span className="label-text font-semibold">Series</span>
               </label>
-              <div className="flex flex-wrap gap-x-4 gap-y-2">
+              <div className="flex flex-wrap gap-x-4 gap-y-2 max-h-40 overflow-y-auto p-3 bg-base-100 border border-base-content/10 rounded-lg">
                 {seriesOptions.map((option) => (
                   <div className="form-control" key={`edit-${option}`}>
                     <label className="label cursor-pointer gap-2">
@@ -504,7 +507,7 @@ const AdminDashboard = ({
               </div>
             </div>
             <div className="modal-action">
-              <button type="submit" className="btn btn-primary">
+              <button type="submit" className="btn btn-primary btn-gradient-primary">
                 Save Changes
               </button>
             </div>

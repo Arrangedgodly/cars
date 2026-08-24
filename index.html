@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link href="/src/index.css" rel="stylesheet" />
     <title>CarsDB</title>
+    <script>
+      (function () {
+        var character = localStorage.getItem("carsdb-character") || "circuitred";
+        var mode = localStorage.getItem("carsdb-mode") || "dark";
+        document.documentElement.setAttribute("data-theme", character + "-" + mode);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

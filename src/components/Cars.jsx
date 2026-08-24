@@ -133,7 +133,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   return (
     <div className="flex flex-col items-center w-full">
       {/* ### START CONTROLS BAR ### */}
-      <div className="w-[75vw] bg-zinc-800 p-4 rounded-lg shadow-lg mb-8">
+      <div className="w-full bg-base-200 border border-base-300 p-4 rounded-box shadow-lg mb-6 sm:mb-8">
         {/* Top row of controls */}
         <div className="flex flex-col sm:flex-row sm:flex-wrap sm:justify-center items-center sm:items-end gap-2">
           {/* Filter Toggle Button */}
@@ -202,7 +202,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
 
         {/* --- START EXPANDABLE FILTER AREA --- */}
         {showFilters && (
-          <div className="mt-6 pt-4 border-t border-zinc-700">
+          <div className="mt-6 pt-4 border-t border-base-300">
             {/* Series Filters */}
             <h4 className="font-semibold mb-2">Series</h4>
             <div className="bg-base-200 p-4 rounded-lg max-h-60 overflow-y-auto grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 gap-2">
@@ -254,7 +254,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
 
         {/* Clear Filters Button */}
         {hasActiveFilters && (
-          <div className="text-center mt-4 pt-4 border-t border-zinc-700">
+          <div className="text-center mt-4 pt-4 border-t border-base-300">
             <button className="btn btn-ghost btn-sm" onClick={clearFilters}>
               Clear All Filters & Search
             </button>
@@ -277,7 +277,7 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           ))}
         </div>
       ) : (
-        <p>No cars match your criteria.</p>
+        <p className="text-base-content/60 py-8">No cars match your criteria.</p>
       )}
 
       {/* PAGINATION */}

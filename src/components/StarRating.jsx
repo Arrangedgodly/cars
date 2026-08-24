@@ -8,7 +8,7 @@ const StarRating = ({ rating, onRatingChange, carId, readOnly = false }) => {
   };
 
   return (
-    <div className="rating rating-md rating-half">
+    <div className={`rating rating-md rating-half ${readOnly ? "opacity-70" : ""}`}>
       <input
         type="radio"
         name={`rating-${carId}`}
@@ -23,7 +23,7 @@ const StarRating = ({ rating, onRatingChange, carId, readOnly = false }) => {
           name={`rating-${carId}`}
           className={`mask mask-star-2 ${
             index % 2 === 0 ? "mask-half-1" : "mask-half-2"
-          } bg-green-500`}
+          } bg-primary`}
           aria-label={`${value} star`}
           value={value}
           checked={rating === value}

@@ -44,33 +44,42 @@ const SignIn = () => {
   };
 
   return (
-    <div>
-      <h2 className="text-2xl">Sign In</h2>
-      <form
-        onSubmit={handleSignIn}
-        className="flex flex-col items-center justify-center"
-      >
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          className="text-center text-lg w-full"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          className="text-center text-lg w-full"
-          required
-        />
-        <button type="submit" className="btn bg-slate-700">
+    <div className="flex flex-col gap-4 w-full sm:w-72">
+      <h2 className="font-fancy text-xs uppercase tracking-wider text-base-content/60">
+        Sign In
+      </h2>
+      <form onSubmit={handleSignIn} className="flex flex-col gap-3">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Email</span>
+          </label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="input input-bordered w-full"
+            required
+          />
+        </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Password</span>
+          </label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="input input-bordered w-full"
+            required
+          />
+        </div>
+        <button type="submit" className="btn btn-primary btn-gradient-primary w-full mt-1">
           Sign In
         </button>
       </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+      {error && <p className="text-error text-sm">{error}</p>}
     </div>
   );
 };

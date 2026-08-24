@@ -7,39 +7,22 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebase";
 import StarRating from "./StarRating";
+import RatingStars from "./RatingStars";
 
 const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
-  const averageRating =
-    car.ratingCount > 0
-      ? (car.totalRatingScore / car.ratingCount).toFixed(1)
-      : 0;
+  const averageRatingValue =
+    car.ratingCount > 0 ? car.totalRatingScore / car.ratingCount : 0;
+  const averageRating = averageRatingValue.toFixed(1);
 
   const userRating = currentUser?.ratings?.[car.id] || 0;
   const isInWishlist = currentUser?.wishlist?.includes(car.id);
   const isOwned = currentUser?.ownedCars?.includes(car.id);
 
-  const getTagColor = (tagString) => {
-  if (!tagString) return "hsl(0, 0%, 50%)";
-
-  let hash = 0;
-  for (let i = 0; i < tagString.length; i++) {
-    const char = tagString.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  
-  const hue = Math.abs(hash) % 360;
-  const saturation = 70;
-  const lightness = 50;
-
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-};
-
-  const cardBgClass = isOwned
-    ? "bg-green-900"
+  const edgeAccentClass = isOwned
+    ? "border-l-4 border-success"
     : isInWishlist
-    ? "bg-amber-900"
-    : "bg-zinc-500";
+    ? "border-l-4 border-warning"
+    : "border-l-4 border-transparent";
 
   const handleSetRating = async (newRating) => {
     if (!currentUser) return;
@@ -103,48 +86,63 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   };
 
   return (
-    <div className="flex flex-col items-center h-full">
+    <div className="flex flex-col gap-1.5 h-full w-full">
       <div
-        className={`card ${cardBgClass} w-40 lg:w-50 transition-colors duration-300 flex-grow`}
+        className={`card bg-base-300 border border-base-300 ${edgeAccentClass} rounded-xl overflow-hidden transition-transform duration-150 hover:-translate-y-0.5 hover:border-primary/60 w-full flex-grow`}
       >
-        <figure>
+        <figure className="relative bg-white">
           <img
             src={car.cloudinary ? car.cloudinary.secure_url : car.image}
             alt={car.name}
-            className="w-full h-30 bg-white object-cover"
+            className="w-full aspect-[4/3] object-cover"
           />
+          {(isOwned || isInWishlist) && (
+            <span
+              className={`absolute top-1.5 right-1.5 font-fancy text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+                isOwned
+                  ? "bg-success/15 text-success border-success/40"
+                  : "bg-warning/15 text-warning border-warning/40"
+              }`}
+            >
+              {isOwned ? "Owned" : "Wishlist"}
+            </span>
+          )}
         </figure>
-        <div className="card-body items-center text-center gap-0 p-1 w-full">
-          <h2 className="text-[14px] font-bold text-wrap w-full">{car.name}</h2>
-          <p className="text-xs text-balance italic w-full">{car.series}</p>
-          <div className="text-center stats stats-vertical bg-transparent">
-            <div className="stat p-1">
-              <p className="stat-title">Average Ranking</p>
-              <p className="font-semibold stat-value text-[14px]">
-                ⭐ {averageRating}
-                <span className="ml-1 stat-desc text-[10px]">
-                  ({car.ratingCount || 0} votes)
-                </span>
-              </p>
-            </div>
+        <div className="card-body car-card-surface p-2.5 gap-1.5">
+          <h2 className="text-sm font-semibold leading-tight text-base-content">
+            {car.name}
+          </h2>
+          <p className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
+            {car.series}
+          </p>
+
+          <div className="flex items-center justify-between mt-0.5">
+            <RatingStars value={averageRatingValue} />
+            <span className="font-fancy text-[9px] text-base-content/50">
+              {averageRating} ({car.ratingCount || 0})
+            </span>
           </div>
 
           {currentUser && (
-            <div className="card-actions justify-center w-full mt-1 border-t border-slate-600 pb-1">
-              <p className="text-xs w-full">Your Rating:</p>
-              <StarRating
-                rating={userRating}
-                onRatingChange={handleSetRating}
-                carId={car.id}
-              />
+            <div className="flex flex-col gap-1.5 mt-1 pt-1.5 border-t border-base-300">
+              <div className="flex items-center justify-between">
+                <span className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
+                  Your Rating
+                </span>
+                <StarRating
+                  rating={userRating}
+                  onRatingChange={handleSetRating}
+                  carId={car.id}
+                />
+              </div>
 
-              <div className="flex mt-1 gap-1 w-full justify-center">
+              <div className="flex gap-1.5">
                 <button
                   onClick={() => handleCollectionToggle("wishlist")}
                   className={
                     isInWishlist
-                      ? "btn btn-xs text-[10px] btn-warning"
-                      : "btn btn-xs text-[10px] btn-outline"
+                      ? "btn btn-xs flex-1 text-[10px] btn-warning"
+                      : "btn btn-xs flex-1 text-[10px] btn-outline"
                   }
                 >
                   {isInWishlist ? "✓ Wishlist" : "+ Wishlist"}
@@ -153,8 +151,8 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
                   onClick={() => handleCollectionToggle("ownedCars")}
                   className={
                     isOwned
-                      ? "btn btn-xs text-[10px] btn-success"
-                      : "btn btn-xs text-[10px] btn-outline"
+                      ? "btn btn-xs flex-1 text-[10px] btn-success"
+                      : "btn btn-xs flex-1 text-[10px] btn-outline"
                   }
                 >
                   {isOwned ? "✓ Owned" : "I Own This"}
@@ -164,17 +162,16 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           )}
         </div>
       </div>
-      <div className="flex flex-wrap justify-center gap-1 w-full min-h-[22px]">
+      <div className="flex flex-wrap gap-1 min-h-[18px]">
         {car.tags &&
           car.tags.length > 0 &&
           car.tags.map((tag) => (
-            <div
+            <span
               key={tag}
-              className="badge badge-xs text-white"
-              style={{ backgroundColor: getTagColor(tag) }}
+              className="font-fancy text-[8px] tracking-wide px-1.5 py-0.5 rounded bg-base-200 border border-base-300 text-base-content/60"
             >
               {tag}
-            </div>
+            </span>
           ))}
       </div>
     </div>

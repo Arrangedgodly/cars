@@ -8,12 +8,33 @@ import SignIn from "./components/SignIn.jsx";
 import Cars from "./components/Cars.jsx";
 import AdminDashboard from "./components/AdminDashboard.jsx";
 import UserPage from "./components/UserPage.jsx";
+import LogoMark from "./components/LogoMark.jsx";
+import ThemePicker from "./components/ThemePicker.jsx";
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [character, setCharacter] = useState(
+    () => localStorage.getItem("carsdb-character") || "circuitred"
+  );
+  const [mode, setMode] = useState(
+    () => localStorage.getItem("carsdb-mode") || "dark"
+  );
+  const theme = `${character}-${mode}`;
+
+  useEffect(() => {
+    localStorage.setItem("carsdb-character", character);
+  }, [character]);
+
+  useEffect(() => {
+    localStorage.setItem("carsdb-mode", mode);
+  }, [mode]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
 
   const handleRatingUpdate = (carId, newRatingData) => {
     setCurrentUser((prevUser) => ({
@@ -123,16 +144,24 @@ function App() {
 
   return (
     <div
-      className="min-h-screen w-full flex flex-col items-center bg-zinc-900 text-base-content p-4"
-      data-theme="cyberpunk"
+      className="min-h-screen w-full flex flex-col items-center bg-base-100 text-base-content p-3 sm:p-4"
     >
-      <div className="navbar bg-zinc-800 rounded-box shadow-lg">
+      <div className="navbar w-full max-w-6xl bg-base-200 border border-base-300 rounded-box shadow-lg px-3 sm:px-4">
         <div className="flex-1">
-          <Link to="/" className="btn btn-ghost text-xl text-zinc-100 btn-sm">
-            CarsDB
+          <Link to="/" className="flex items-center gap-2.5 py-1">
+            <LogoMark className="h-8 w-8 sm:h-9 sm:w-9 shrink-0 text-base-content" />
+            <span className="font-fancy font-bold uppercase tracking-wider text-sm sm:text-base text-base-content">
+              Cars<span className="text-primary">DB</span>
+            </span>
           </Link>
         </div>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-2">
+          <ThemePicker
+            character={character}
+            mode={mode}
+            onCharacterChange={setCharacter}
+            onModeChange={setMode}
+          />
           {isAdmin && (
             <Link to="/admin" className="btn btn-outline btn-accent btn-sm">
               Admin
@@ -140,22 +169,22 @@ function App() {
           )}
           {currentUser ? (
             <>
-              <Link to={`/user/${currentUser.uid}`} className="btn btn-outline text-zinc-100 btn-sm">
+              <Link to={`/user/${currentUser.uid}`} className="btn btn-outline btn-sm">
                 My Profile
               </Link>
-              <button className="btn btn-outline text-zinc-100 btn-sm" onClick={() => signOut(auth)}>
+              <button className="btn btn-outline btn-sm" onClick={() => signOut(auth)}>
                 Sign Out
               </button>
             </>
           ) : (
-            <Link to="/login" className="btn btn-outline btn-primary btn-sm">
+            <Link to="/login" className="btn btn-primary btn-gradient-primary btn-sm">
               Sign In / Sign Up
             </Link>
           )}
         </div>
       </div>
 
-      <div className="container mx-auto mt-8 flex flex-col items-center gap-8 w-full">
+      <div className="mx-auto mt-6 sm:mt-8 flex flex-col items-center gap-8 w-full max-w-6xl">
         {loading ? (
           <span className="loading loading-lg"></span>
         ) : (
@@ -178,10 +207,12 @@ function App() {
                 currentUser ? (
                   <Navigate to="/" replace />
                 ) : (
-                  <div className="card bg-base-200 shadow-xl p-8">
-                    <div className="flex flex-col md:flex-row gap-8">
+                  <div className="card bg-base-200 border border-base-300 shadow-xl p-6 sm:p-8 w-full max-w-2xl mx-auto">
+                    <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-start">
                       <SignIn />
-                      <div className="divider md:divider-horizontal">OR</div>
+                      <div className="divider md:divider-horizontal font-fancy text-xs text-base-content/40">
+                        OR
+                      </div>
                       <SignUp />
                     </div>
                   </div>
