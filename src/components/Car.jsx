@@ -124,38 +124,37 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
           </div>
 
           {currentUser && (
-            <div className="flex flex-col gap-1.5 mt-1 pt-1.5 border-t border-base-300">
-              <div className="flex items-center justify-between">
-                <span className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
-                  Your Rating
-                </span>
-                <StarRating
-                  rating={userRating}
-                  onRatingChange={handleSetRating}
-                  carId={car.id}
-                />
-              </div>
+            <div className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-base-300 min-w-0">
+              <span className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
+                Your Rating
+              </span>
+              <StarRating
+                rating={userRating}
+                onRatingChange={handleSetRating}
+                carId={car.id}
+                size="sm"
+              />
 
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 mt-0.5">
                 <button
                   onClick={() => handleCollectionToggle("wishlist")}
                   className={
                     isInWishlist
-                      ? "btn btn-xs flex-1 text-[10px] btn-warning"
-                      : "btn btn-xs flex-1 text-[10px] btn-outline"
+                      ? "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-warning"
+                      : "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-outline"
                   }
                 >
-                  {isInWishlist ? "✓ Wishlist" : "+ Wishlist"}
+                  {isInWishlist ? "✓ Wishlist" : "Wishlist"}
                 </button>
                 <button
                   onClick={() => handleCollectionToggle("ownedCars")}
                   className={
                     isOwned
-                      ? "btn btn-xs flex-1 text-[10px] btn-success"
-                      : "btn btn-xs flex-1 text-[10px] btn-outline"
+                      ? "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-success"
+                      : "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-outline"
                   }
                 >
-                  {isOwned ? "✓ Owned" : "I Own This"}
+                  {isOwned ? "✓ Owned" : "Owned"}
                 </button>
               </div>
             </div>

@@ -1,5 +1,6 @@
-const StarRating = ({ rating, onRatingChange, carId, readOnly = false }) => {
+const StarRating = ({ rating, onRatingChange, carId, readOnly = false, size = "md" }) => {
   const stars = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+  const sizeClass = size === "sm" ? "rating-sm" : "rating-md";
 
   const handleOnChange = (e) => {
     if (onRatingChange) {
@@ -8,7 +9,7 @@ const StarRating = ({ rating, onRatingChange, carId, readOnly = false }) => {
   };
 
   return (
-    <div className={`rating rating-md rating-half ${readOnly ? "opacity-70" : ""}`}>
+    <div className={`rating ${sizeClass} rating-half ${readOnly ? "opacity-70" : ""}`}>
       <input
         type="radio"
         name={`rating-${carId}`}
