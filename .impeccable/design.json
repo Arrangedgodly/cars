@@ -1,0 +1,274 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-25T00:00:00.000Z",
+  "title": "Design System: CarsDB",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Circuit Red",
+        "canonical": "#e31c1c",
+        "tonalRamp": ["#280606", "#4a0b0b", "#721111", "#9b1616", "#c41a1a", "#e93434", "#f77a7a", "#ffd0d0"]
+      },
+      "primary-dinoco": {
+        "role": "primary",
+        "displayName": "Dinoco Blue",
+        "canonical": "#4fb3f5",
+        "tonalRamp": ["#061c2b", "#0b3855", "#105d8a", "#167db8", "#319bd8", "#63bff7", "#a0dcff", "#d9f2ff"]
+      },
+      "primary-cruz": {
+        "role": "primary",
+        "displayName": "Cruz Lime",
+        "canonical": "#cddc1f",
+        "tonalRamp": ["#1b1d04", "#3a3e08", "#646b0d", "#8b9613", "#adb91b", "#d8e832", "#eff67e", "#faffc9"]
+      },
+      "primary-mater": {
+        "role": "primary",
+        "displayName": "Mater Rust",
+        "canonical": "#b5622c",
+        "tonalRamp": ["#241005", "#4a200a", "#71300f", "#913f18", "#b85b26", "#d7834c", "#efb187", "#ffe1ca"]
+      },
+      "primary-doc": {
+        "role": "primary",
+        "displayName": "Doc Navy",
+        "canonical": "#2a4d8f",
+        "tonalRamp": ["#060d1c", "#0e1e3e", "#173268", "#21478b", "#3b65ae", "#6689c9", "#a4bce7", "#dce7ff"]
+      },
+      "primary-ramone": {
+        "role": "primary",
+        "displayName": "Ramone Purple",
+        "canonical": "#7c3fd4",
+        "tonalRamp": ["#16062d", "#2d0b59", "#461188", "#5e25b0", "#7c3fd4", "#a06be9", "#caa6f7", "#ebdcff"]
+      },
+      "primary-chick": {
+        "role": "primary",
+        "displayName": "Chick Green",
+        "canonical": "#2f9e54",
+        "tonalRamp": ["#051b0b", "#0b3a18", "#125c28", "#1f7c3d", "#2f9e54", "#5bbc76", "#9bdaa9", "#d9f7df"]
+      },
+      "accent-neutral": {
+        "role": "neutral",
+        "displayName": "Character-Neutral Accent",
+        "canonical": "#c2c4c9",
+        "tonalRamp": ["#202124", "#3b3d42", "#585b62", "#777a82", "#9699a1", "#b5b8bf", "#d2d4d9", "#f1f2f4"]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Near-Black Canvas",
+        "canonical": "#0b0c0e",
+        "tonalRamp": ["#050506", "#0b0c0e", "#14161a", "#202329", "#30343b", "#4a4f58", "#747a84", "#b2b6bd"]
+      },
+      "panel-dark": {
+        "role": "neutral",
+        "displayName": "Graphite Panel",
+        "canonical": "#1a1c20",
+        "tonalRamp": ["#0b0c0e", "#15171a", "#1a1c20", "#272a30", "#3a3e46", "#555a64", "#818791", "#c2c5ca"]
+      },
+      "border-dark": {
+        "role": "neutral",
+        "displayName": "Graphite Border",
+        "canonical": "#26282d",
+        "tonalRamp": ["#101114", "#1a1c20", "#26282d", "#34373e", "#484c54", "#666b75", "#9297a0", "#d0d3d8"]
+      },
+      "text-dark": {
+        "role": "neutral",
+        "displayName": "Ivory Text",
+        "canonical": "#f2f1ee",
+        "tonalRamp": ["#272522", "#514f4b", "#77746f", "#9c9993", "#b9b7b1", "#d0cfca", "#e4e3df", "#f2f1ee"]
+      },
+      "surface-light": {
+        "role": "neutral",
+        "displayName": "Warm Light Canvas",
+        "canonical": "#f2f0ec",
+        "tonalRamp": ["#2b2925", "#57544d", "#817d74", "#aaa69d", "#c9c6be", "#dfdcd5", "#eceae5", "#f2f0ec"]
+      },
+      "panel-light": {
+        "role": "neutral",
+        "displayName": "Paper Panel",
+        "canonical": "#fbfaf8",
+        "tonalRamp": ["#2e2d2a", "#5a5852", "#86837c", "#aaa8a1", "#c8c6c0", "#dedcd7", "#efeeeb", "#fbfaf8"]
+      },
+      "border-light": {
+        "role": "neutral",
+        "displayName": "Warm Light Border",
+        "canonical": "#e4e1da",
+        "tonalRamp": ["#272521", "#4e4b45", "#77736b", "#9c988f", "#b9b6ae", "#cecbc4", "#dad8d2", "#e4e1da"]
+      },
+      "text-light": {
+        "role": "neutral",
+        "displayName": "Ink Text",
+        "canonical": "#17181b",
+        "tonalRamp": ["#17181b", "#2b2c31", "#45474d", "#62646b", "#81838a", "#a1a3a9", "#c0c2c6", "#e2e3e5"]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Warm White",
+        "canonical": "#f5f5f0",
+        "tonalRamp": ["#292a25", "#54554e", "#7e7f76", "#a3a49b", "#c2c3ba", "#d7d8d0", "#e9e9e4", "#f5f5f0"]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Collection Green",
+        "canonical": "#3f9f5f",
+        "tonalRamp": ["#06170c", "#0d3719", "#155827", "#22783d", "#3f9f5f", "#69bd81", "#a4dda9", "#daf5df"]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Wishlist Amber",
+        "canonical": "#d98a2b",
+        "tonalRamp": ["#241000", "#4b2100", "#733700", "#a35308", "#d98a2b", "#eaae61", "#f4cf9d", "#ffeed8"]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Error Red",
+        "canonical": "#ff5a5a",
+        "tonalRamp": ["#300000", "#630000", "#970909", "#c52d2d", "#ff5a5a", "#ff8585", "#ffb8b8", "#ffe0e0"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Titillium Web Display",
+        "purpose": "Headings and high-salience interface text; keep it open and athletic rather than ornamental."
+      },
+      "label": {
+        "displayName": "Martian Mono Utility",
+        "purpose": "Compact metadata, status labels, ratings, counts, and uppercase utility signals."
+      }
+    },
+    "shadows": [
+      {
+        "name": "ambient-panel",
+        "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+        "purpose": "Navigation, filter panels, and focused workflow containers."
+      },
+      {
+        "name": "ambient-deep",
+        "value": "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+        "purpose": "Authentication and admin containers that need stronger grouping."
+      },
+      {
+        "name": "card-hover",
+        "value": "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)",
+        "purpose": "Subtle support for the car-card hover response; tonal layering remains primary."
+      }
+    ],
+    "motion": [
+      {
+        "name": "short-state",
+        "value": "150ms ease",
+        "purpose": "Car-card hover translation and border response."
+      },
+      {
+        "name": "brightness-feedback",
+        "value": "200ms ease",
+        "purpose": "Primary and secondary gradient button hover feedback."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The compact, gradient-backed action for signing in, saving, and confirming the main path.",
+      "html": "<button class=\"ds-btn-primary\" type=\"button\">Sign In</button>",
+      "css": ".ds-btn-primary { background: linear-gradient(165deg, #ed4848 0%, #e31c1c 55%, #a61515 100%); color: #fff; border: 1px solid transparent; border-radius: .5rem; padding: .5rem 1rem; font: 600 .875rem/1.25rem 'Titillium Web', sans-serif; transition: filter .2s ease; cursor: pointer; } .ds-btn-primary:hover { filter: brightness(1.08); } .ds-btn-primary:focus-visible { outline: 2px solid #c2c4c9; outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "A calm secondary action that keeps the catalog hierarchy intact.",
+      "html": "<button class=\"ds-btn-outline\" type=\"button\">My Profile</button>",
+      "css": ".ds-btn-outline { background: transparent; color: #f2f1ee; border: 1px solid #5b5e65; border-radius: .5rem; padding: .5rem 1rem; font: 600 .875rem/1.25rem 'Titillium Web', sans-serif; transition: background-color .2s ease, border-color .2s ease; cursor: pointer; } .ds-btn-outline:hover { background: #26282d; border-color: #c2c4c9; } .ds-btn-outline:focus-visible { outline: 2px solid #e31c1c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "The bordered, compact field used for catalog search and admin filtering.",
+      "html": "<label class=\"ds-field\"><span>Search</span><input class=\"ds-input\" placeholder=\"Search by name, series, tag...\" /></label>",
+      "css": ".ds-field { display: grid; gap: .375rem; color: #c2c4c9; font: 500 .75rem/1.2rem 'Martian Mono', monospace; letter-spacing: .08em; text-transform: uppercase; } .ds-input { width: 100%; box-sizing: border-box; background: #1a1c20; color: #f2f1ee; border: 1px solid #26282d; border-radius: .5rem; padding: .5rem .75rem; font: 400 1rem/1.5rem 'Titillium Web', sans-serif; outline: none; } .ds-input::placeholder { color: #9297a0; } .ds-input:focus { border-color: #e31c1c; box-shadow: 0 0 0 2px rgb(227 28 28 / .2); }"
+    },
+    {
+      "name": "Application Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "A rounded application bar that combines identity, theme control, and account actions.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\"><svg viewBox=\"0 0 40 40\" aria-hidden=\"true\"><rect x=\"1\" y=\"1\" width=\"38\" height=\"38\" rx=\"9\" fill=\"#1a1c20\" stroke=\"currentColor\"/><path d=\"M13 9v22M13 9h16v10H13M13 14h16M13 19h16\" stroke=\"currentColor\" stroke-width=\"2\"/></svg><span>Cars<span>DB</span></span></a><div class=\"ds-nav-actions\"><button class=\"ds-btn-outline\" type=\"button\">McQueen</button><button class=\"ds-btn-primary\" type=\"button\">Sign In</button></div></nav>",
+      "css": ".ds-nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; box-sizing: border-box; background: #1a1c20; border: 1px solid #26282d; border-radius: .9rem; padding: .75rem 1rem; box-shadow: 0 10px 15px -3px rgb(0 0 0 / .1), 0 4px 6px -4px rgb(0 0 0 / .1); } .ds-brand { display: inline-flex; align-items: center; gap: .625rem; color: #f2f1ee; text-decoration: none; font: 700 .875rem/1 'Titillium Web', sans-serif; letter-spacing: .08em; text-transform: uppercase; } .ds-brand span span { color: #e31c1c; } .ds-brand svg { width: 2.25rem; height: 2.25rem; } .ds-nav-actions { display: flex; align-items: center; gap: .5rem; }"
+    },
+    {
+      "name": "Car Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The compact catalog unit balancing image, identity, rating, and collection state.",
+      "html": "<article class=\"ds-car-card\"><div class=\"ds-car-art\"><span>McQueen</span></div><div class=\"ds-car-body\"><h3>Lightning McQueen</h3><p class=\"ds-meta\">Cars</p><div class=\"ds-rating\"><span>★★★★☆</span><small>4.2 (18)</small></div><div class=\"ds-chip-row\"><span class=\"ds-chip\">Owned</span><span class=\"ds-chip\">Racecar</span></div></div></article>",
+      "css": ".ds-car-card { overflow: hidden; background: #26282d; border: 1px solid #26282d; border-radius: .75rem; color: #f2f1ee; transition: transform 150ms ease, border-color 150ms ease; } .ds-car-card:hover { transform: translateY(-.125rem); border-color: rgb(227 28 28 / .6); } .ds-car-art { display: grid; place-items: end start; aspect-ratio: 4 / 3; padding: .75rem; background: linear-gradient(135deg, #e31c1c 0 38%, #f2f1ee 38% 64%, #0b0c0e 64%); color: #fff; font: 700 1.125rem/1 'Titillium Web', sans-serif; } .ds-car-body { display: grid; gap: .375rem; padding: .625rem; background: linear-gradient(170deg, rgb(26 28 32 / .78) 0%, #26282d 100%); } .ds-car-body h3 { margin: 0; font: 600 .875rem/1.1rem 'Titillium Web', sans-serif; } .ds-meta, .ds-rating small { margin: 0; color: rgb(242 241 238 / .5); font: 500 .5625rem/1 'Martian Mono', monospace; letter-spacing: .08em; text-transform: uppercase; } .ds-rating { display: flex; align-items: center; justify-content: space-between; gap: .5rem; } .ds-rating > span { color: #e31c1c; letter-spacing: .08em; } .ds-chip-row { display: flex; flex-wrap: wrap; gap: .25rem; padding-top: .375rem; border-top: 1px solid #26282d; } .ds-chip { border: 1px solid #26282d; border-radius: .5rem; background: #1a1c20; color: rgb(242 241 238 / .6); padding: .125rem .375rem; font: 500 .5rem/1rem 'Martian Mono', monospace; letter-spacing: .06em; text-transform: uppercase; }"
+    },
+    {
+      "name": "Theme Picker",
+      "kind": "custom",
+      "refersTo": "theme-picker",
+      "description": "The signature personality control: a character swatch and label paired with a light/dark switch.",
+      "html": "<div class=\"ds-theme-picker\"><button class=\"ds-btn-outline ds-theme-button\" type=\"button\"><i></i> McQueen</button><button class=\"ds-btn-outline ds-mode-button\" type=\"button\" aria-label=\"Toggle theme mode\">◐</button></div>",
+      "css": ".ds-theme-picker { display: flex; align-items: center; gap: .375rem; } .ds-theme-button { display: inline-flex; align-items: center; gap: .5rem; } .ds-theme-button i { display: inline-block; width: .625rem; height: .625rem; border-radius: 9999px; background: #e31c1c; } .ds-mode-button { width: 2rem; height: 2rem; padding: 0; display: grid; place-items: center; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Simplicity",
+    "overview": "CarsDB keeps the collector's attention on the catalog. The interface is compact and information-forward, with a playful layer supplied by the character theme selector rather than by decorative clutter. It should feel like a capable collector tool that happens to have personality: professional enough to trust with a collection, lively enough to make browsing enjoyable.\n\nThe incumbent system uses a dark-first, softly layered surface model with rounded containers, thin borders, compact metadata, and small moments of lift on interaction. The active character palette changes the accent and supporting surfaces while the information hierarchy stays stable. Light mode is a supported alternate surface, not a separate visual language.",
+    "keyCharacteristics": [
+      "Simplicity before decoration.",
+      "Playful character color with professional structure.",
+      "Soft tonal layering and restrained elevation.",
+      "Compact, scan-friendly catalog cards.",
+      "Innovative controls expressed through useful interaction, not novelty."
+    ],
+    "rules": [
+      {
+        "name": "The One Palette, Many Personalities Rule",
+        "body": "Theme changes may change the accent family and supporting tones, but they must not change the product's hierarchy, terminology, or interaction model.",
+        "section": "colors"
+      },
+      {
+        "name": "The Signal Scale Rule",
+        "body": "Use Titillium Web for reading and action; use Martian Mono only when a value benefits from compact, instrument-like emphasis.",
+        "section": "typography"
+      },
+      {
+        "name": "The Soft-Layer Rule",
+        "body": "Prefer tonal surface steps and restrained shadows; reserve stronger elevation for containers that organize a workflow or respond to interaction.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the catalog and collection state visually easy to scan before adding decoration.",
+      "Do use the active character accent for meaningful action, selection, ratings, and identity moments.",
+      "Do preserve the Titillium Web and Martian Mono pairing and their role split.",
+      "Do use soft surface layers, thin borders, and restrained shadows to organize workflow regions.",
+      "Do make theme changes feel personal while keeping layout and behavior consistent."
+    ],
+    "donts": [
+      "Don't let a playful theme become novelty UI or obscure the catalog.",
+      "Don't introduce dense decorative patterns, loud textures, or competing accent colors without a clear functional reason.",
+      "Don't use rounded pills for every surface; reserve them for statuses and compact tags.",
+      "Don't replace the compact inventory rhythm with oversized marketing-style compositions.",
+      "Don't use visual styling to blur the distinction between shared catalog facts and personal collection state."
+    ]
+  }
+}

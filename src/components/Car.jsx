@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   doc,
+  FieldPath,
   runTransaction,
   updateDoc,
   arrayRemove,
@@ -11,180 +12,371 @@ import StarRating from "./StarRating";
 import RatingStars from "./RatingStars";
 import HighlightText from "./HighlightText";
 
+const normalizeRating = (value) => {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) return 0;
+
+  return Math.min(5, Math.max(0, Math.round(numericValue * 2) / 2));
+};
+
+const normalizeNonNegativeNumber = (value) => {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) && numericValue >= 0 ? numericValue : 0;
+};
+
+const normalizeNonNegativeInteger = (value) =>
+  Math.floor(normalizeNonNegativeNumber(value));
+
+const getImageSource = (car) => {
+  const candidate = car?.cloudinary?.secure_url ?? car?.image;
+  return typeof candidate === "string" && candidate.trim() ? candidate : null;
+};
+
+const getMatchRanges = (matches, key, text, arrayIndex) => {
+  if (!Array.isArray(matches) || !text) return [];
+
+  return matches
+    .filter(
+      (match) =>
+        match?.key === key &&
+        (arrayIndex === undefined || match.arrayIndex === arrayIndex)
+    )
+    .flatMap((match) => (Array.isArray(match.indices) ? match.indices : []))
+    .filter(
+      (range) =>
+        Array.isArray(range) &&
+        range.length >= 2 &&
+        Number.isInteger(range[0]) &&
+        Number.isInteger(range[1]) &&
+        range[0] <= range[1]
+    )
+    .map(([start, end]) => [
+      Math.max(0, start),
+      Math.min(text.length - 1, end),
+    ])
+    .filter(([start, end]) => start <= end);
+};
+
 const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) => {
   const [actionError, setActionError] = useState(null);
-  const nameRanges = (matches ?? [])
-    .filter((m) => m.key === "name")
-    .flatMap((m) => m.indices);
-  const seriesRanges = (matches ?? [])
-    .filter((m) => m.key === "series")
-    .flatMap((m) => m.indices);
-  const tagMatches = (matches ?? []).filter((m) => m.key === "tags");
+  const [pendingAction, setPendingAction] = useState(null);
+  const actionLockRef = useRef(null);
 
+  const carId = car?.id == null ? null : String(car.id).trim();
+  const userId =
+    typeof currentUser?.uid === "string" && currentUser.uid.trim()
+      ? currentUser.uid.trim()
+      : null;
+  const carName =
+    typeof car?.name === "string" && car.name.trim() ? car.name : "Unnamed car";
+  const seriesName =
+    typeof car?.series === "string" && car.series.trim()
+      ? car.series
+      : "Uncategorized";
+  const tagEntries = Array.isArray(car?.tags)
+    ? car.tags
+        .map((tag, index) => ({ tag, index }))
+        .filter(({ tag }) => typeof tag === "string" && tag.trim())
+    : [];
+  const safeMatches = Array.isArray(matches) ? matches : [];
+  const nameRanges = getMatchRanges(safeMatches, "name", carName);
+  const seriesRanges = getMatchRanges(safeMatches, "series", seriesName);
+  const imageSource = getImageSource(car);
+  const [imageSrc, setImageSrc] = useState(imageSource);
+  const [imageFailed, setImageFailed] = useState(!imageSource);
+
+  useEffect(() => {
+    setImageSrc(imageSource);
+    setImageFailed(!imageSource);
+  }, [imageSource]);
+
+  const ratingCount = normalizeNonNegativeInteger(car?.ratingCount);
+  const totalRatingScore = normalizeNonNegativeNumber(car?.totalRatingScore);
   const averageRatingValue =
-    car.ratingCount > 0 ? car.totalRatingScore / car.ratingCount : 0;
+    ratingCount > 0
+      ? Math.min(5, Math.max(0, totalRatingScore / ratingCount))
+      : 0;
   const averageRating = averageRatingValue.toFixed(1);
 
-  const userRating = currentUser?.ratings?.[car.id] || 0;
-  const isInWishlist = currentUser?.wishlist?.includes(car.id);
-  const isOwned = currentUser?.ownedCars?.includes(car.id);
+  const userRating = carId ? normalizeRating(currentUser?.ratings?.[carId]) : 0;
+  const wishlistIds = Array.isArray(currentUser?.wishlist)
+    ? currentUser.wishlist
+    : [];
+  const ownedIds = Array.isArray(currentUser?.ownedCars)
+    ? currentUser.ownedCars
+    : [];
+  const isInWishlist = Boolean(carId && wishlistIds.includes(carId));
+  const isOwned = Boolean(carId && ownedIds.includes(carId));
+  const collectionStatus = isOwned && isInWishlist
+    ? "Owned · Wishlist"
+    : isOwned
+    ? "Owned"
+    : "Wishlist";
+
+  const beginAction = (action) => {
+    if (actionLockRef.current) return false;
+
+    actionLockRef.current = action;
+    setPendingAction(action);
+    return true;
+  };
+
+  const finishAction = () => {
+    actionLockRef.current = null;
+    setPendingAction(null);
+  };
 
   const edgeAccentClass = isOwned
-    ? "border-l-4 border-success"
+    ? "ring-1 ring-inset ring-success/60"
     : isInWishlist
-    ? "border-l-4 border-warning"
-    : "border-l-4 border-transparent";
+    ? "ring-1 ring-inset ring-warning/60"
+    : "";
 
   const handleSetRating = async (newRating) => {
-    if (!currentUser) return;
+    if (!currentUser || actionLockRef.current) return;
 
-    const carDocRef = doc(db, "cars", car.id);
-    const userDocRef = doc(db, "users", currentUser.uid);
-
-    const oldRating = currentUser?.ratings?.[car.id] || 0;
-    const ratingDiff = newRating - oldRating;
-
-    const currentTotalScore = car.totalRatingScore || 0;
-    const currentRatingCount = car.ratingCount || 0;
-
-    const newTotalRatingScore = currentTotalScore + ratingDiff;
-    let newRatingCount = currentRatingCount;
-    if (oldRating === 0) {
-      newRatingCount++;
+    const numericRating = Number(newRating);
+    if (
+      !Number.isFinite(numericRating) ||
+      numericRating < 0.5 ||
+      numericRating > 5 ||
+      !Number.isInteger(numericRating * 2)
+    ) {
+      setActionError("Choose a rating from 0.5 to 5 stars.");
+      return;
     }
 
+    if (!carId || !userId) {
+      setActionError("This car cannot be updated right now.");
+      return;
+    }
+
+    const nextRating = normalizeRating(numericRating);
+    if (nextRating === userRating) return;
+    if (!beginAction("rating")) return;
+
+    const carDocRef = doc(db, "cars", carId);
+    const userDocRef = doc(db, "users", userId);
+
     try {
+      let newTotalRatingScore = 0;
+      let newRatingCount = 0;
+
       await runTransaction(db, async (transaction) => {
         const carDoc = await transaction.get(carDocRef);
-        if (!carDoc.exists()) throw "Car document does not exist!";
+        const userDoc = await transaction.get(userDocRef);
+        if (!carDoc.exists()) throw new Error("Car document does not exist.");
+        if (!userDoc.exists()) throw new Error("User profile does not exist.");
+
+        const storedCar = carDoc.data() ?? {};
+        const storedUser = userDoc.data() ?? {};
+        const oldRating = normalizeRating(storedUser.ratings?.[carId]);
+        const currentTotalScore = normalizeNonNegativeNumber(
+          storedCar.totalRatingScore
+        );
+        const currentRatingCount = normalizeNonNegativeInteger(
+          storedCar.ratingCount
+        );
+
+        newTotalRatingScore = Math.max(
+          0,
+          currentTotalScore + nextRating - oldRating
+        );
+        newRatingCount = oldRating === 0
+          ? currentRatingCount + 1
+          : currentRatingCount;
 
         transaction.update(carDocRef, {
           totalRatingScore: newTotalRatingScore,
           ratingCount: newRatingCount,
         });
 
-        transaction.update(userDocRef, {
-          [`ratings.${car.id}`]: newRating,
-        });
+        transaction.update(
+          userDocRef,
+          new FieldPath("ratings", carId),
+          nextRating
+        );
       });
 
-      onRatingUpdate(car.id, {
-        newTotalRatingScore,
-        newRatingCount,
-        newPersonalRating: newRating,
-      });
+      if (typeof onRatingUpdate === "function") {
+        onRatingUpdate(carId, {
+          newTotalRatingScore,
+          newRatingCount,
+          newPersonalRating: nextRating,
+        });
+      }
 
       setActionError(null);
     } catch (e) {
-      console.error("Transaction failed: ", e);
-      setActionError("Couldn't save your rating.");
+      console.error("Rating transaction failed:", e);
+      setActionError("Couldn't save your rating. Check your connection and try again.");
+    } finally {
+      finishAction();
     }
   };
 
   const handleCollectionToggle = async (collectionType) => {
-    if (!currentUser) return;
+    if (!currentUser || actionLockRef.current) return;
 
-    const userDocRef = doc(db, "users", currentUser.uid);
+    const collectionField =
+      collectionType === "wishlist" || collectionType === "ownedCars"
+        ? collectionType
+        : null;
+    if (!collectionField) return;
+
+    if (!carId || !userId) {
+      setActionError("This car cannot be updated right now.");
+      return;
+    }
+
+    if (!beginAction(`collection:${collectionField}`)) return;
+
+    const userDocRef = doc(db, "users", userId);
     const isInCollection =
-      collectionType === "wishlist" ? isInWishlist : isOwned;
+      collectionField === "wishlist" ? isInWishlist : isOwned;
 
     try {
       await updateDoc(userDocRef, {
-        [collectionType]: isInCollection
-          ? arrayRemove(car.id)
-          : arrayUnion(car.id),
+        [collectionField]: isInCollection
+          ? arrayRemove(carId)
+          : arrayUnion(carId),
       });
 
-      onCollectionUpdate(car.id, collectionType, !isInCollection);
+      if (typeof onCollectionUpdate === "function") {
+        onCollectionUpdate(carId, collectionField, !isInCollection);
+      }
       setActionError(null);
     } catch (e) {
-      // Previously unguarded: a rejection here (most often a missing profile
-      // document) surfaced only as an unhandled rejection in the console, so
-      // the button appeared to do nothing at all.
-      console.error("Collection update failed: ", e);
+      console.error("Collection update failed:", e);
       setActionError(
-        collectionType === "wishlist"
-          ? "Couldn't update your wishlist."
-          : "Couldn't update your collection."
+        collectionField === "wishlist"
+          ? "Couldn't update your wishlist. Check your connection and try again."
+          : "Couldn't update your collection. Check your connection and try again."
       );
+    } finally {
+      finishAction();
     }
   };
 
   return (
-    <div className="flex flex-col gap-1.5 h-full w-full">
+    <div
+      className="flex min-w-0 flex-col gap-1.5 h-full w-full"
+      aria-busy={Boolean(pendingAction)}
+    >
       <div
-        className={`card bg-base-300 border border-base-300 ${edgeAccentClass} rounded-xl overflow-hidden transition-transform duration-150 hover:-translate-y-0.5 hover:border-primary/60 w-full flex-grow`}
+        className={`card min-w-0 bg-base-300 border border-base-300 ${edgeAccentClass} rounded-xl overflow-hidden transition-transform duration-150 hover:-translate-y-0.5 hover:border-primary/60 w-full flex-grow`}
       >
         <figure className="relative bg-white">
-          <img
-            src={car.cloudinary ? car.cloudinary.secure_url : car.image}
-            alt={car.name}
-            className="w-full aspect-[4/3] object-cover"
-          />
+          {imageSrc && !imageFailed ? (
+            <img
+              src={imageSrc}
+              alt={carName}
+              className="w-full aspect-[4/3] object-cover"
+              decoding="async"
+              loading="lazy"
+              onError={() => {
+                setImageFailed(true);
+                setImageSrc(null);
+              }}
+            />
+          ) : (
+            <div
+              role="img"
+              aria-label={`Image unavailable for ${carName}`}
+              className="flex aspect-[4/3] items-center justify-center bg-base-200 px-3 text-center text-xs text-base-content/60"
+            >
+              Image unavailable
+            </div>
+          )}
           {(isOwned || isInWishlist) && (
             <span
               className={`absolute top-1.5 right-1.5 font-fancy text-[9px] uppercase tracking-wide px-2 py-0.5 rounded-full border ${
                 isOwned
                   ? "bg-success/15 text-success border-success/40"
-                  : "bg-warning/15 text-warning border-warning/40"
-              }`}
+                : "bg-warning/15 text-warning border-warning/40"
+              } max-w-[70%] text-right leading-tight whitespace-normal`}
+              aria-label={`Collection status: ${collectionStatus}`}
             >
-              {isOwned ? "Owned" : "Wishlist"}
+              {collectionStatus}
             </span>
           )}
         </figure>
-        <div className="card-body car-card-surface p-2.5 gap-1.5">
-          <h2 className="text-sm font-semibold leading-tight text-base-content">
-            <HighlightText text={car.name} ranges={nameRanges} />
+        <div className="card-body car-card-surface min-w-0 p-2 sm:p-2.5 gap-1.5">
+          <h2 className="min-w-0 break-words text-sm font-semibold leading-tight text-base-content">
+            <HighlightText text={carName} ranges={nameRanges} />
           </h2>
-          <p className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
-            <HighlightText text={car.series} ranges={seriesRanges} />
+          <p className="min-w-0 break-words font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
+            <HighlightText text={seriesName} ranges={seriesRanges} />
           </p>
 
-          <div className="flex items-center justify-between mt-0.5">
+          <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 mt-0.5">
             <RatingStars value={averageRatingValue} />
-            <span className="font-fancy text-[9px] text-base-content/50">
-              {averageRating} ({car.ratingCount || 0})
+            <span className="shrink-0 font-fancy text-[9px] tabular-nums text-base-content/50">
+              {averageRating} ({ratingCount})
             </span>
           </div>
 
           {currentUser && (
-            <div className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-base-300 min-w-0">
+            <div
+              className="flex flex-col gap-1 mt-1 pt-1.5 border-t border-base-300 min-w-0"
+              aria-busy={pendingAction === "rating"}
+            >
               <span className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
                 Your Rating
               </span>
-              <StarRating
-                rating={userRating}
-                onRatingChange={handleSetRating}
-                carId={car.id}
-                size="sm"
-              />
+              <div className="flex min-h-11 items-center touch-manipulation">
+                <StarRating
+                  rating={userRating}
+                  onRatingChange={handleSetRating}
+                  carId={carId ?? "unknown"}
+                  size="sm"
+                  readOnly={pendingAction === "rating" || !carId || !userId}
+                />
+              </div>
 
-              <div className="flex gap-1.5 mt-0.5">
+              <div className="grid grid-cols-2 gap-1.5 mt-0.5">
                 <button
+                  type="button"
                   onClick={() => handleCollectionToggle("wishlist")}
+                  disabled={Boolean(pendingAction) || !carId || !userId}
+                  aria-pressed={isInWishlist}
                   className={
                     isInWishlist
-                      ? "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-warning"
-                      : "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-outline"
+                      ? "btn btn-xs min-w-0 min-h-11 sm:min-h-8 h-auto px-1 text-[11px] sm:text-[10px] leading-tight whitespace-normal touch-manipulation btn-warning"
+                      : "btn btn-xs min-w-0 min-h-11 sm:min-h-8 h-auto px-1 text-[11px] sm:text-[10px] leading-tight whitespace-normal touch-manipulation btn-outline"
                   }
                 >
                   {isInWishlist ? "✓ Wishlist" : "Wishlist"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => handleCollectionToggle("ownedCars")}
+                  disabled={Boolean(pendingAction) || !carId || !userId}
+                  aria-pressed={isOwned}
                   className={
                     isOwned
-                      ? "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-success"
-                      : "btn btn-xs flex-1 min-w-0 text-[10px] px-1 btn-outline"
+                      ? "btn btn-xs min-w-0 min-h-11 sm:min-h-8 h-auto px-1 text-[11px] sm:text-[10px] leading-tight whitespace-normal touch-manipulation btn-success"
+                      : "btn btn-xs min-w-0 min-h-11 sm:min-h-8 h-auto px-1 text-[11px] sm:text-[10px] leading-tight whitespace-normal touch-manipulation btn-outline"
                   }
                 >
                   {isOwned ? "✓ Owned" : "Owned"}
                 </button>
               </div>
 
+              {pendingAction && (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="text-base-content/50 text-[10px] sm:text-[9px] leading-tight"
+                >
+                  {pendingAction === "rating"
+                    ? "Saving rating…"
+                    : "Updating collection…"}
+                </span>
+              )}
+
               {actionError && (
-                <p role="alert" className="text-error text-[9px] leading-tight mt-0.5">
+                <p role="alert" className="text-error text-[10px] sm:text-[9px] leading-tight mt-0.5">
                   {actionError}
                 </p>
               )}
@@ -193,18 +385,14 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) 
         </div>
       </div>
       <div className="flex flex-wrap gap-1 min-h-[18px]">
-        {car.tags &&
-          car.tags.length > 0 &&
-          car.tags.map((tag, index) => (
+        {tagEntries.map(({ tag, index }) => (
             <span
-              key={tag}
-              className="font-fancy text-[8px] tracking-wide px-1.5 py-0.5 rounded bg-base-200 border border-base-300 text-base-content/60"
+              key={`${tag}-${index}`}
+              className="min-w-0 max-w-full break-words font-fancy text-[8px] tracking-wide px-1.5 py-0.5 rounded bg-base-200 border border-base-300 text-base-content/60"
             >
               <HighlightText
                 text={tag}
-                ranges={
-                  tagMatches.find((m) => m.arrayIndex === index)?.indices
-                }
+                ranges={getMatchRanges(safeMatches, "tags", tag, index)}
               />
             </span>
           ))}
