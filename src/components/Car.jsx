@@ -8,8 +8,17 @@ import {
 import { db } from "../firebase";
 import StarRating from "./StarRating";
 import RatingStars from "./RatingStars";
+import HighlightText from "./HighlightText";
 
-const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
+const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) => {
+  const nameRanges = (matches ?? [])
+    .filter((m) => m.key === "name")
+    .flatMap((m) => m.indices);
+  const seriesRanges = (matches ?? [])
+    .filter((m) => m.key === "series")
+    .flatMap((m) => m.indices);
+  const tagMatches = (matches ?? []).filter((m) => m.key === "tags");
+
   const averageRatingValue =
     car.ratingCount > 0 ? car.totalRatingScore / car.ratingCount : 0;
   const averageRating = averageRatingValue.toFixed(1);
@@ -110,10 +119,10 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
         </figure>
         <div className="card-body car-card-surface p-2.5 gap-1.5">
           <h2 className="text-sm font-semibold leading-tight text-base-content">
-            {car.name}
+            <HighlightText text={car.name} ranges={nameRanges} />
           </h2>
           <p className="font-fancy text-[9px] uppercase tracking-wide text-base-content/50">
-            {car.series}
+            <HighlightText text={car.series} ranges={seriesRanges} />
           </p>
 
           <div className="flex items-center justify-between mt-0.5">
@@ -164,12 +173,17 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate }) => {
       <div className="flex flex-wrap gap-1 min-h-[18px]">
         {car.tags &&
           car.tags.length > 0 &&
-          car.tags.map((tag) => (
+          car.tags.map((tag, index) => (
             <span
               key={tag}
               className="font-fancy text-[8px] tracking-wide px-1.5 py-0.5 rounded bg-base-200 border border-base-300 text-base-content/60"
             >
-              {tag}
+              <HighlightText
+                text={tag}
+                ranges={
+                  tagMatches.find((m) => m.arrayIndex === index)?.indices
+                }
+              />
             </span>
           ))}
       </div>

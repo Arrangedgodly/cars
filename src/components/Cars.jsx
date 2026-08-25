@@ -1,5 +1,62 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import Fuse from "fuse.js";
 import Car from "./Car";
+import Pagination from "./Pagination";
+
+const FUSE_KEYS = [
+  { name: "name", weight: 0.6 },
+  { name: "tags", weight: 0.25 },
+  { name: "series", weight: 0.15 },
+];
+
+const TIGHT_FUSE_OPTIONS = {
+  keys: FUSE_KEYS,
+  includeScore: true,
+  includeMatches: true,
+  ignoreLocation: true,
+  threshold: 0.3,
+};
+
+const LOOSE_FUSE_OPTIONS = { ...TIGHT_FUSE_OPTIONS, threshold: 0.6 };
+
+const DID_YOU_MEAN_SCORE_CUTOFF = 0.45;
+
+// Runs each whitespace-separated word as its own fuzzy search across all
+// weighted keys, then keeps only cars that matched every word (AND across
+// words, OR across fields) so multi-word queries like "lightning cars" work.
+const searchAllTokens = (fuseInstance, term) => {
+  const tokens = term.trim().split(/\s+/).filter(Boolean);
+  if (tokens.length === 0) return [];
+
+  const perTokenResults = tokens.map((token) => {
+    const map = new Map();
+    fuseInstance.search(token).forEach((result) => {
+      map.set(result.item.id, result);
+    });
+    return map;
+  });
+
+  const [firstMap, ...restMaps] = perTokenResults;
+  const combined = [];
+
+  firstMap.forEach((firstResult, id) => {
+    const matchingResults = [firstResult];
+    const isInAll = restMaps.every((map) => {
+      const result = map.get(id);
+      if (result) matchingResults.push(result);
+      return Boolean(result);
+    });
+    if (!isInAll) return;
+
+    const score =
+      matchingResults.reduce((sum, result) => sum + (result.score ?? 0), 0) /
+      matchingResults.length;
+    const matches = matchingResults.flatMap((result) => result.matches ?? []);
+    combined.push({ item: firstResult.item, score, matches });
+  });
+
+  return combined.sort((a, b) => a.score - b.score);
+};
 
 const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -11,69 +68,92 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
   });
   const [userCollectionFilter, setUserCollectionFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
+  const topRef = useRef(null);
 
   const uniqueTags = [...new Set(cars.flatMap((car) => car.tags || []))].sort();
   const uniqueSeries = [
     ...new Set(cars.flatMap((car) => car.series || [])),
   ].sort();
 
-  const filteredCars = cars.filter((car) => {
-    const term = searchTerm.toLowerCase();
-    const carTags = car.tags || [];
-    const carSeries = car.series || "";
+  const scopedCars = useMemo(() => {
+    return cars.filter((car) => {
+      const carTags = car.tags || [];
+      const carSeries = car.series || "";
 
-    const matchesSearch =
-      searchTerm === ""
-        ? true
-        : car.name.toLowerCase().includes(term) ||
-          car.series.toLowerCase().includes(term) ||
-          carTags.some((tag) => tag.toLowerCase().includes(term));
+      const matchesSeries =
+        filters.series.length === 0
+          ? true
+          : filters.series.includes(carSeries);
+      const matchesTag =
+        filters.tags.length === 0
+          ? true
+          : carTags.some((tag) => filters.tags.includes(tag));
 
-    const matchesSeries =
-      filters.series.length === 0
-        ? true
-        : filters.series.includes(carSeries);
-    const matchesTag =
-      filters.tags.length === 0
-        ? true
-        : carTags.some((tag) => filters.tags.includes(tag));
+      const matchesUserCollection = () => {
+        if (!currentUser) return true;
+        if (userCollectionFilter === "owned") {
+          return currentUser.ownedCars?.includes(car.id);
+        }
+        if (userCollectionFilter === "wishlist") {
+          return currentUser.wishlist?.includes(car.id);
+        }
+        return true;
+      };
 
-    const matchesUserCollection = () => {
-      if (!currentUser) return true;
-      if (userCollectionFilter === "owned") {
-        return currentUser.ownedCars?.includes(car.id);
+      return matchesSeries && matchesTag && matchesUserCollection();
+    });
+  }, [cars, filters, userCollectionFilter, currentUser]);
+
+  const tightFuse = useMemo(
+    () => new Fuse(scopedCars, TIGHT_FUSE_OPTIONS),
+    [scopedCars]
+  );
+  const looseFuse = useMemo(
+    () => new Fuse(scopedCars, LOOSE_FUSE_OPTIONS),
+    [scopedCars]
+  );
+
+  const trimmedSearch = searchTerm.trim();
+  let sortedCars;
+  let matchesById = new Map();
+  let didYouMean = null;
+
+  if (trimmedSearch === "") {
+    sortedCars = [...scopedCars].sort((a, b) => {
+      const [field, direction] = sortBy.split("-");
+
+      if (field === "rating") {
+        const getAvg = (car) =>
+          car.ratingCount > 0 ? car.totalRatingScore / car.ratingCount : 0;
+        const ratingA = getAvg(a);
+        const ratingB = getAvg(b);
+        return direction === "asc" ? ratingA - ratingB : ratingB - ratingA;
       }
-      if (userCollectionFilter === "wishlist") {
-        return currentUser.wishlist?.includes(car.id);
+
+      if (direction === "asc") {
+        return a.name.localeCompare(b.name);
+      } else {
+        return b.name.localeCompare(a.name);
       }
-      return true;
-    };
-
-    return (
-      matchesSearch &&
-      matchesSeries &&
-      matchesTag &&
-      matchesUserCollection()
-    );
-  });
-
-  const sortedCars = [...filteredCars].sort((a, b) => {
-    const [field, direction] = sortBy.split("-");
-
-    if (field === "rating") {
-      const getAvg = (car) =>
-        car.ratingCount > 0 ? car.totalRatingScore / car.ratingCount : 0;
-      const ratingA = getAvg(a);
-      const ratingB = getAvg(b);
-      return direction === "asc" ? ratingA - ratingB : ratingB - ratingA;
-    }
-
-    if (direction === "asc") {
-      return a.name.localeCompare(b.name);
+    });
+  } else {
+    const tightResults = searchAllTokens(tightFuse, trimmedSearch);
+    if (tightResults.length > 0) {
+      sortedCars = tightResults.map((result) => result.item);
+      tightResults.forEach((result) =>
+        matchesById.set(result.item.id, result.matches)
+      );
     } else {
-      return b.name.localeCompare(a.name);
+      sortedCars = [];
+      const looseResults = searchAllTokens(looseFuse, trimmedSearch);
+      if (
+        looseResults.length > 0 &&
+        looseResults[0].score <= DID_YOU_MEAN_SCORE_CUTOFF
+      ) {
+        didYouMean = looseResults[0].item.name;
+      }
     }
-  });
+  }
 
   const carsPerPage = 24;
   const lastCarIndex = currentPage * carsPerPage;
@@ -118,20 +198,16 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
     searchTerm !== "" ||
     userCollectionFilter !== "all";
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+  const goToPage = (page) => {
+    const clamped = Math.min(Math.max(page, 1), totalPages);
+    if (clamped === currentPage) return;
+    setCurrentPage(clamped);
+    topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   return (
     <div className="flex flex-col items-center w-full">
+      <div ref={topRef} />
       {/* ### START CONTROLS BAR ### */}
       <div className="w-full bg-base-200 border border-base-300 p-4 rounded-box shadow-lg mb-6 sm:mb-8">
         {/* Top row of controls */}
@@ -263,6 +339,17 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
       </div>
       {/* ### END CONTROLS BAR ### */}
 
+      {/* PAGINATION (TOP) */}
+      {totalPages > 1 && (
+        <div className="mb-6 sm:mb-8">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
+        </div>
+      )}
+
       {/* CARS GRID */}
       {currentCars.length > 0 ? (
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
@@ -273,33 +360,37 @@ const Cars = ({ cars, currentUser, onRatingUpdate, onCollectionUpdate }) => {
               currentUser={currentUser}
               onRatingUpdate={onRatingUpdate}
               onCollectionUpdate={onCollectionUpdate}
+              matches={matchesById.get(car.id)}
             />
           ))}
         </div>
       ) : (
-        <p className="text-base-content/60 py-8">No cars match your criteria.</p>
+        <p className="text-base-content/60 py-8">
+          No cars match your criteria.
+          {didYouMean && (
+            <>
+              {" "}
+              Did you mean{" "}
+              <button
+                className="link link-primary"
+                onClick={() => setSearchTerm(didYouMean)}
+              >
+                {didYouMean}
+              </button>
+              ?
+            </>
+          )}
+        </p>
       )}
 
-      {/* PAGINATION */}
+      {/* PAGINATION (BOTTOM) */}
       {totalPages > 1 && (
-        <div className="join mt-8">
-          <button
-            className="join-item btn"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-          >
-            «
-          </button>
-          <button className="join-item btn">
-            Page {currentPage} of {totalPages}
-          </button>
-          <button
-            className="join-item btn"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-          >
-            »
-          </button>
+        <div className="mt-8">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={goToPage}
+          />
         </div>
       )}
     </div>
