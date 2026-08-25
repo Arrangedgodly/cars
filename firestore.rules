@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // === USER RULES ===
+    match /users/{userId} {
+
+      // Any signed-in user can read a profile — profile pages are public to
+      // members. NOTE: this exposes every field on the document, including
+      // 'email'. UserPage only displays the email on your own profile, but a
+      // determined reader can still pull it from the raw document. To make that
+      // impossible, email has to move to a private subcollection.
+      allow read: if request.auth != null;
+
+      // On signup, a user can create their own doc...
+      allow create: if request.auth != null && request.auth.uid == userId
+                     // ...BUT they CANNOT make themselves admin
+                     && request.resource.data.isAdmin == false
+                     // ...and their email must match their auth email.
+                     // NOTE: the claim lives at request.auth.token.email.
+                     // `request.auth` itself only exposes `uid` and `token`,
+                     // so `request.auth.email` is always undefined and would
+                     // deny every create.
+                     && request.resource.data.email == request.auth.token.email;
+
+      // A user can update their own doc...
+      allow update: if request.auth != null && request.auth.uid == userId
+                     // ...BUT they can ONLY change these specific, safe fields.
+                     // This PREVENTS them from changing 'isAdmin' or 'email'.
+                     && request.resource.data.diff(resource.data)
+                        .affectedKeys().hasOnly(['wishlist', 'ownedCars', 'ratings']);
+    }
+
+    // === CAR RULES ===
+    match /cars/{carId} {
+      // Anyone can read the list of cars.
+      allow read: if true;
+
+      // This function safely checks if a user is an admin.
+      function isAdmin() {
+        return exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      }
+
+      // Admins can create and delete cars.
+      allow create, delete: if isAdmin();
+
+      // **RULE 1: LOGGED-IN USERS**
+      // Any authenticated user can update a car IF they are ONLY changing the rating fields.
+      function isRatingOnlyUpdate() {
+        return request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['ratingCount', 'totalRatingScore']);
+      }
+      function isRatingCountValid() {
+        let countAfter = request.resource.data.ratingCount;
+        let countBefore = 'ratingCount' in resource.data ? resource.data.ratingCount : 0;
+        return countAfter == countBefore + 1 || countAfter == countBefore;
+      }
+      allow update: if request.auth != null && isRatingOnlyUpdate() && isRatingCountValid();
+
+      // **RULE 2: ADMINS**
+      // An admin can update any field on a car document.
+      allow update: if isAdmin();
+    }
+  }
+}

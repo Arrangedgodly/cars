@@ -50,6 +50,10 @@ const UserPage = ({
     .filter((car) => userData?.ownedCars?.includes(car.id))
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  // Profiles are readable by any signed-in user, so only show the email address
+  // back to its owner. Everyone else gets a neutral, non-identifying label.
+  const isOwnProfile = currentUser?.uid === userId;
+
   if (loading)
     return (
       <div className="text-center">
@@ -63,10 +67,10 @@ const UserPage = ({
     <div className="container mx-auto p-4 max-w-6xl">
       <div className="text-center mb-10">
         <p className="font-fancy text-xs uppercase tracking-wider text-base-content/50 mb-1">
-          User Profile
+          {isOwnProfile ? "Your Profile" : "Collector Profile"}
         </p>
         <h1 className="text-2xl sm:text-3xl font-bold text-base-content">
-          {userData.email}
+          {isOwnProfile ? userData.email : `Collector ${userId.slice(0, 6)}`}
         </h1>
       </div>
 

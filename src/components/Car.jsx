@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   doc,
   runTransaction,
@@ -11,6 +12,7 @@ import RatingStars from "./RatingStars";
 import HighlightText from "./HighlightText";
 
 const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) => {
+  const [actionError, setActionError] = useState(null);
   const nameRanges = (matches ?? [])
     .filter((m) => m.key === "name")
     .flatMap((m) => m.indices);
@@ -72,9 +74,10 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) 
         newPersonalRating: newRating,
       });
 
-      console.log("Rating updated successfully!");
+      setActionError(null);
     } catch (e) {
       console.error("Transaction failed: ", e);
+      setActionError("Couldn't save your rating.");
     }
   };
 
@@ -85,13 +88,26 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) 
     const isInCollection =
       collectionType === "wishlist" ? isInWishlist : isOwned;
 
-    await updateDoc(userDocRef, {
-      [collectionType]: isInCollection
-        ? arrayRemove(car.id)
-        : arrayUnion(car.id),
-    });
+    try {
+      await updateDoc(userDocRef, {
+        [collectionType]: isInCollection
+          ? arrayRemove(car.id)
+          : arrayUnion(car.id),
+      });
 
-    onCollectionUpdate(car.id, collectionType, !isInCollection);
+      onCollectionUpdate(car.id, collectionType, !isInCollection);
+      setActionError(null);
+    } catch (e) {
+      // Previously unguarded: a rejection here (most often a missing profile
+      // document) surfaced only as an unhandled rejection in the console, so
+      // the button appeared to do nothing at all.
+      console.error("Collection update failed: ", e);
+      setActionError(
+        collectionType === "wishlist"
+          ? "Couldn't update your wishlist."
+          : "Couldn't update your collection."
+      );
+    }
   };
 
   return (
@@ -166,6 +182,12 @@ const Car = ({ car, currentUser, onRatingUpdate, onCollectionUpdate, matches }) 
                   {isOwned ? "✓ Owned" : "Owned"}
                 </button>
               </div>
+
+              {actionError && (
+                <p role="alert" className="text-error text-[9px] leading-tight mt-0.5">
+                  {actionError}
+                </p>
+              )}
             </div>
           )}
         </div>

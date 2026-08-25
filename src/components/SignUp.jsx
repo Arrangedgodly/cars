@@ -1,9 +1,8 @@
 // src/components/SignUp.js
 
 import React, { useState } from "react";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -15,22 +14,10 @@ const SignUp = () => {
     setError(null);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      console.log("User created successfully!", user);
-
-      await setDoc(doc(db, "users", user.uid), {
-        email: user.email,
-        isAdmin: false,
-        ownedCars: [],
-        wishlist: [],
-        ratings: {},
-      });
-      
+      await createUserWithEmailAndPassword(auth, email, password);
+      // The profile document is created by ensureUserProfile(), driven by the
+      // auth-state listener in App. Doing it here instead raced the redirect
+      // that unmounts this component, so any failure vanished silently.
     } catch (error) {
       console.error("Error signing up:", error);
       setError(error.message);

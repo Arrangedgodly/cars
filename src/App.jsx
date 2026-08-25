@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { auth, db } from "./firebase.js";
+import { auth, db, ensureUserProfile } from "./firebase.js";
 import { Routes, Route, Link, Navigate } from "react-router";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import SignUp from "./components/SignUp.jsx";
 import SignIn from "./components/SignIn.jsx";
 import Cars from "./components/Cars.jsx";
@@ -14,6 +14,7 @@ import ThemePicker from "./components/ThemePicker.jsx";
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [profileError, setProfileError] = useState(null);
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [character, setCharacter] = useState(
@@ -97,26 +98,34 @@ function App() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const userDocRef = doc(db, "users", user.uid);
-        const userDocSnap = await getDoc(userDocRef);
-
-        if (userDocSnap.exists()) {
-          const firestoreUserData = userDocSnap.data();
-          const combinedUser = {
-            uid: user.uid,
-            email: user.email,
-            ...firestoreUserData,
-          };
-          setCurrentUser(combinedUser);
-          setIsAdmin(firestoreUserData.isAdmin === true);
-        } else {
-          // This case handles newly signed-up users who might not have a doc yet
-          setCurrentUser(user);
-          setIsAdmin(false);
-        }
-      } else {
+      if (!user) {
         setCurrentUser(null);
+        setIsAdmin(false);
+        setProfileError(null);
+        return;
+      }
+
+      try {
+        // Creates the profile document on first sign-in, so a new account is
+        // usable immediately and an account that never got one is repaired.
+        const profile = await ensureUserProfile(user);
+        setCurrentUser({ uid: user.uid, email: user.email, ...profile });
+        setIsAdmin(profile.isAdmin === true);
+        setProfileError(null);
+      } catch (error) {
+        // Signed in but with no usable profile — say so, instead of rendering a
+        // logged-in UI whose rating and collection buttons quietly do nothing.
+        console.error("Could not load or create user profile:", error);
+        setProfileError(
+          "You're signed in, but we couldn't load your profile. Ratings and collections won't save until this is resolved."
+        );
+        setCurrentUser({
+          uid: user.uid,
+          email: user.email,
+          ownedCars: [],
+          wishlist: [],
+          ratings: {},
+        });
         setIsAdmin(false);
       }
     });
@@ -185,6 +194,12 @@ function App() {
       </div>
 
       <div className="mx-auto mt-6 sm:mt-8 flex flex-col items-center gap-8 w-full max-w-6xl">
+        {profileError && (
+          <div role="alert" className="alert alert-error w-full">
+            <span className="text-sm">{profileError}</span>
+          </div>
+        )}
+
         {loading ? (
           <span className="loading loading-lg"></span>
         ) : (

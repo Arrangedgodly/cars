@@ -1,9 +1,8 @@
 // src/components/SignIn.js
 
 import React, { useState } from "react";
-import { auth, db } from "../firebase";
+import { auth } from "../firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -15,28 +14,9 @@ const SignIn = () => {
     setError(null);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
-      console.log("User signed in successfully!", user);
-
-      const userDocRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(userDocRef);
-
-      if (!docSnap.exists()) {
-        console.log("User document not found, creating one...");
-        await setDoc(doc(db, "users", user.uid), {
-          email: user.email,
-          isAdmin: false,
-          ownedCars: [],
-          wishlist: [],
-          ratings: {},
-        });
-      }
-
+      await signInWithEmailAndPassword(auth, email, password);
+      // Profile lookup and repair happen in ensureUserProfile(), driven by the
+      // auth-state listener in App, so it covers every sign-in path at once.
     } catch (error) {
       console.error("Error signing in:", error);
       setError("Failed to sign in. Please check your email and password.");
