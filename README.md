@@ -1,3 +1,4 @@
+
 <p align="center">
   <img src="public/carsdb.svg" alt="CarsDB logo" width="56" height="56">
 </p>
@@ -12,13 +13,13 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/carsdb-catalog-desktop.jpg" alt="CarsDB catalog with search, sort and filter controls, pagination, and populated die-cast cards" width="960">
+ <img width="1165" height="747" alt="carsdb-catalog-desktop" src="https://github.com/user-attachments/assets/9be2c48a-eccb-4823-938e-ed357291c976" />
 </p>
 
 *Browse the catalog with search, sort, and filters. This signed-out view shows 1,455 entries.*
 
 <p align="center">
-  <img src="docs/assets/carsdb-lightning-desktop.jpg" alt="CarsDB search results for Lightning with 78 matching cars and populated Lightning McQueen cards" width="960">
+  <img width="1165" height="747" alt="carsdb-lightning-desktop" src="https://github.com/user-attachments/assets/e91f2558-45f3-4137-ab3a-7380a3411dab" />
 </p>
 
 *Search in action: Lightning narrows the catalog to 78 matching cars.*
